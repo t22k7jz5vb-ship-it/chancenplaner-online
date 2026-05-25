@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chancenplaner 2026</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --border: #334155;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(180deg, #020617 0%, #111827 100%); color: var(--text); line-height: 1.55; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1, h2, h3 { margin-top: 0; }
+    .card { background: rgba(17, 24, 39, 0.92); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; }
+    input[type="text"], input[type="password"], select, textarea { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font: inherit; }
+    textarea { min-height: 110px; resize: vertical; }
+    .small textarea { min-height: 80px; }
+    .meta { color: var(--muted); font-size: 0.95rem; }
+    .law-box { border-left: 5px solid var(--accent); background: rgba(34, 197, 94, 0.08); padding: 18px; border-radius: 12px; }
+    .law-title { font-size: 1.35rem; font-weight: 800; margin: 0 0 12px; color: var(--text); }
+    .law-text { white-space: pre-wrap; color: var(--text); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .top-row { align-items: end; justify-content: space-between; }
+    .date-wrap { min-width: 260px; flex: 1; }
+    .success-list { display: grid; gap: 12px; }
+    .stack-list { display: grid; gap: 16px; }
+    .plan-header-right { color: var(--accent); font-weight: 700; }
+    .hero-line { margin-top: 8px; }
+    .date-inline { display: flex; align-items: center; gap: 12px; }
+    .date-inline .date-display { flex: 1; }
+    .week-chip { white-space: nowrap; font-weight: 700; color: var(--accent); }
+    button { border: 0; border-radius: 10px; padding: 12px 16px; font: inherit; font-weight: 700; cursor: pointer; }
+    .ghost { background: #334155; color: var(--text); }
+    .status { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(34, 197, 94, 0.10); border: 1px solid rgba(34, 197, 94, 0.35); color: #dcfce7; display: none; }
+    .hidden-date { display: none; }
+    .date-display { font-size: 1.05rem; }
+    .prompt { font-weight: 700; margin: 0 0 12px; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .week-toggle { min-width: 156px; }
+    .weekly-view { display: none; }
+    .week-days-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .week-day-card { display: grid; gap: 12px; }
+    .week-day-card h3 { margin-bottom: 0; color: var(--accent); }
+    .week-title { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .week-label-strong { color: var(--accent); font-weight: 700; white-space: nowrap; }
+    .area-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+    .area-open-btn { white-space: nowrap; background: #334155; color: var(--text); }
+    .area-detail-view { display: none; }
+    .area-detail-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .area-detail-stack { display: grid; gap: 16px; }
+    .section-title { margin: 0 0 8px; color: var(--accent); font-size: 1rem; }
+    .auth-card { display: grid; gap: 14px; }
+    .auth-row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .auth-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card auth-card" id="authCard">
+      <div>
+        <h2 style="margin-bottom:8px;">Login</h2>
+        <div class="muted">Privat, mit deinem eigenen Zugang. Danach hast du auf allen Geräten denselben Stand.</div>
+      </div>
+      <form id="loginForm">
+        <div class="auth-row">
+          <div>
+            <label for="email">E-Mail</label>
+            <input id="email" type="text" autocomplete="username">
+          </div>
+          <div>
+            <label for="password">Passwort</label>
+            <input id="password" type="password" autocomplete="current-password">
+          </div>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" id="loginBtn">Einloggen</button>
+          <button type="button" class="ghost" id="signupBtn">Account anlegen</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="status" id="statusBox"></div>
+
+    <div id="appShell" class="hidden">
+    <div class="card">
+      <div class="header-row">
+        <div>
+          <h1>Chancenplaner 2026</h1>
+          <div class="plan-header-right hero-line">ICH bestimme über mein Leben – und nicht andere</div>
+        </div>
+        <div class="header-actions">
+          <button class="ghost week-toggle" id="weekToggleBtn" type="button">Woche planen</button>
+          <button class="ghost" id="logoutBtn" type="button">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dailyView">
+      <div class="card">
+        <div class="stack-list">
+          <div class="small">
+            <label for="identityBlock">Identität</label>
+            <textarea id="identityBlock"></textarea>
+          </div>
+          <div class="small">
+            <label for="missionBlock">Lebenssinn/Mission</label>
+            <textarea id="missionBlock"></textarea>
+          </div>
+          <div class="small">
+            <label for="valuesBlock">Werte/Rollen/Glaubenssätze</label>
+            <textarea id="valuesBlock"></textarea>
+          </div>
+          <div class="small">
+            <label for="goalLong10">langfr. Ziele (10 Jahre)</label>
+            <textarea id="goalLong10"></textarea>
+          </div>
+          <div class="small">
+            <label for="goalMid25">mittelfr. Ziele (2–5 Jahre)</label>
+            <textarea id="goalMid25"></textarea>
+          </div>
+          <div class="small">
+            <label for="goalShort1">kurzfr. Ziele (1 Jahr)</label>
+            <textarea id="goalShort1"></textarea>
+          </div>
+          <div class="small">
+            <label for="mottoLong">Motto: (langfr.)</label>
+            <input id="mottoLong" type="text">
+          </div>
+          <div class="small">
+            <label for="focusWeek">Fokus: (diese Woche)</label>
+            <input id="focusWeek" type="text">
+          </div>
+          <div class="small">
+            <label for="priorityWeek">Prioritäten dieser Woche</label>
+            <textarea id="priorityWeek"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="actions top-row">
+          <div class="date-wrap">
+            <label for="displayDate">Datum</label>
+            <div class="date-inline">
+              <input id="displayDate" class="date-display" type="text" readonly>
+              <div id="weekLabel" class="week-chip">KW</div>
+            </div>
+            <input id="entryDate" class="hidden-date" type="date">
+          </div>
+          <button class="ghost" id="clearBtn">Diesen Tag leeren</button>
+        </div>
+        <div class="small">
+          <label for="chance">1. Warum ist der heutige Tag eine Chance?</label>
+          <textarea id="chance"></textarea>
+        </div>
+        <div class="small">
+          <label for="gratitude">2. Wofür bin ich dankbar?</label>
+          <textarea id="gratitude"></textarea>
+        </div>
+        <div class="small">
+          <label for="task">3. Wichtigste Aufgabe heute (60-60-20)</label>
+          <textarea id="task"></textarea>
+        </div>
+        <div class="small">
+          <label>4. Gesetze der Gewinner</label>
+          <div class="law-box">
+            <div class="law-title" id="lawTitle"></div>
+            <div class="law-text" id="lawText"></div>
+          </div>
+        </div>
+        <div class="small">
+          <label for="lawAction">5. Wie lebe ich dieses Gesetz heute?</label>
+          <textarea id="lawAction"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="prompt">Was ist mir heute gut gelungen?</p>
+        <div class="success-list">
+          <div class="small"><label for="success1">Erfolg 1</label><input id="success1" type="text"></div>
+          <div class="small"><label for="success2">Erfolg 2</label><input id="success2" type="text"></div>
+          <div class="small"><label for="success3">Erfolg 3</label><input id="success3" type="text"></div>
+          <div class="small"><label for="success4">Erfolg 4</label><input id="success4" type="text"></div>
+          <div class="small"><label for="success5">Erfolg 5</label><input id="success5" type="text"></div>
+        </div>
+        <div class="grid">
+          <div>
+            <label for="taskStatus">Wichtigste Aufgabe heute: gelungen?</label>
+            <select id="taskStatus">
+              <option value="">Bitte wählen</option>
+              <option value="gelungen">gelungen</option>
+              <option value="teilweise">teilweise gelungen</option>
+              <option value="nicht">nicht gelungen</option>
+            </select>
+          </div>
+          <div>
+            <label for="lawStatus">Gesetz des Tages: gelungen?</label>
+            <select id="lawStatus">
+              <option value="">Bitte wählen</option>
+              <option value="gelungen">gelungen</option>
+              <option value="teilweise">teilweise gelungen</option>
+              <option value="nicht">nicht gelungen</option>
+            </select>
+          </div>
+        </div>
+        <div class="small">
+          <label for="taskWhy">Warum war die wichtigste Aufgabe gelungen oder nicht gelungen?</label>
+          <textarea id="taskWhy"></textarea>
+        </div>
+        <div class="small">
+          <label for="lawWhy">Warum ist mir das Gesetz gelungen oder nicht gelungen?</label>
+          <textarea id="lawWhy"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="weeklyView" class="weekly-view">
+      <div class="card">
+        <div class="week-title">
+          <div>
+            <h2>Woche planen</h2>
+            <div class="meta" id="weeklySundayLabel">am 31. Mai 26</div>
+          </div>
+          <div class="week-label-strong" id="weeklyViewTitle">KW</div>
+        </div>
+      </div>
+
+      <div class="card" id="weeklyOverviewCard">
+        <div class="stack-list">
+          <div class="small">
+            <div class="area-row">
+              <div>
+                <label for="weeklyHealth">Gesundheit</label>
+                <textarea id="weeklyHealth"></textarea>
+              </div>
+              <button type="button" class="area-open-btn" id="open-area-health">Jahresplan</button>
+            </div>
+          </div>
+          <div class="small">
+            <div class="area-row">
+              <div>
+                <label for="weeklyRelationships">Beziehungen</label>
+                <textarea id="weeklyRelationships"></textarea>
+              </div>
+              <button type="button" class="area-open-btn" id="open-area-relationships">Jahresplan</button>
+            </div>
+          </div>
+          <div class="small">
+            <div class="area-row">
+              <div>
+                <label for="weeklyFinances">Finanzen</label>
+                <textarea id="weeklyFinances"></textarea>
+              </div>
+              <button type="button" class="area-open-btn" id="open-area-finances">Jahresplan</button>
+            </div>
+          </div>
+          <div class="small">
+            <div class="area-row">
+              <div>
+                <label for="weeklyEmotions">Emotionen</label>
+                <textarea id="weeklyEmotions"></textarea>
+              </div>
+              <button type="button" class="area-open-btn" id="open-area-emotions">Jahresplan</button>
+            </div>
+          </div>
+          <div class="small">
+            <div class="area-row">
+              <div>
+                <label for="weeklyPurpose">Lebenssinn/Job/Spirit</label>
+                <textarea id="weeklyPurpose"></textarea>
+              </div>
+              <button type="button" class="area-open-btn" id="open-area-purpose">Jahresplan</button>
+            </div>
+          </div>
+          <div class="small">
+            <label for="weeklyJoy">Was hat mir wirklich Spass gemacht?</label>
+            <textarea id="weeklyJoy"></textarea>
+          </div>
+          <div class="small">
+            <label for="weeklyLearning">Was habe ich gelernt?</label>
+            <textarea id="weeklyLearning"></textarea>
+          </div>
+          <div class="small">
+            <label for="weeklySuccessJournal">Erfolgs-Journal: Was ist mir gut gelungen - Erfolge, Anerkennung</label>
+            <textarea id="weeklySuccessJournal"></textarea>
+          </div>
+          <div class="small">
+            <label for="weeklySuccessMove">Was würde ich diese Woche tun, wenn ich wüsste, dass ich damit Erfolg hätte?</label>
+            <textarea id="weeklySuccessMove"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card area-detail-view" id="areaDetailView">
+        <div class="area-detail-header">
+          <div>
+            <h3 id="areaDetailTitle">Bereich</h3>
+            <div class="meta">Detailplanung für einen Lebensbereich</div>
+          </div>
+          <button type="button" class="ghost" id="closeAreaDetailBtn">Zurück</button>
+        </div>
+        <div class="area-detail-stack">
+          <div class="small">
+            <h4 class="section-title">A = Tun / Muss</h4>
+            <textarea id="area-detail-must"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">B = Geplant, aber kein Muss</h4>
+            <textarea id="area-detail-plan"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">C = Wünschenswert / nicht vergessen</h4>
+            <textarea id="area-detail-wish"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">Täglich</h4>
+            <textarea id="area-detail-daily"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">Mehrmals pro Woche</h4>
+            <textarea id="area-detail-multiweek"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">Wöchentlich</h4>
+            <textarea id="area-detail-weekly"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">Monatlich</h4>
+            <textarea id="area-detail-monthly"></textarea>
+          </div>
+          <div class="small">
+            <h4 class="section-title">Umgesetzt</h4>
+            <textarea id="area-detail-done"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="week-days-grid">
+        <div class="card week-day-card">
+          <h3>Montag</h3>
+          <div class="small">
+            <label for="weekly-montag-activity">Aktivität:</label>
+            <textarea id="weekly-montag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-montag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-montag-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Dienstag</h3>
+          <div class="small">
+            <label for="weekly-dienstag-activity">Aktivität:</label>
+            <textarea id="weekly-dienstag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-dienstag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-dienstag-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Mittwoch</h3>
+          <div class="small">
+            <label for="weekly-mittwoch-activity">Aktivität:</label>
+            <textarea id="weekly-mittwoch-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-mittwoch-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-mittwoch-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Donnerstag</h3>
+          <div class="small">
+            <label for="weekly-donnerstag-activity">Aktivität:</label>
+            <textarea id="weekly-donnerstag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-donnerstag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-donnerstag-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Freitag</h3>
+          <div class="small">
+            <label for="weekly-freitag-activity">Aktivität:</label>
+            <textarea id="weekly-freitag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-freitag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-freitag-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Samstag</h3>
+          <div class="small">
+            <label for="weekly-samstag-activity">Aktivität:</label>
+            <textarea id="weekly-samstag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-samstag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-samstag-goal"></textarea>
+          </div>
+        </div>
+
+        <div class="card week-day-card">
+          <h3>Sonntag</h3>
+          <div class="small">
+            <label for="weekly-sonntag-activity">Aktivität:</label>
+            <textarea id="weekly-sonntag-activity"></textarea>
+          </div>
+          <div class="small">
+            <label for="weekly-sonntag-goal">Ziel/Erg./Gründe:</label>
+            <textarea id="weekly-sonntag-goal"></textarea>
+          </div>
+        </div>
+      </div>
+            <div id="areaDetailStorage" style="display:none;">
+        <textarea id="area-health-must"></textarea>
+        <textarea id="area-health-plan"></textarea>
+        <textarea id="area-health-wish"></textarea>
+        <textarea id="area-health-daily"></textarea>
+        <textarea id="area-health-multiweek"></textarea>
+        <textarea id="area-health-weekly"></textarea>
+        <textarea id="area-health-monthly"></textarea>
+        <textarea id="area-health-done"></textarea>
+        <textarea id="area-relationships-must"></textarea>
+        <textarea id="area-relationships-plan"></textarea>
+        <textarea id="area-relationships-wish"></textarea>
+        <textarea id="area-relationships-daily"></textarea>
+        <textarea id="area-relationships-multiweek"></textarea>
+        <textarea id="area-relationships-weekly"></textarea>
+        <textarea id="area-relationships-monthly"></textarea>
+        <textarea id="area-relationships-done"></textarea>
+        <textarea id="area-finances-must"></textarea>
+        <textarea id="area-finances-plan"></textarea>
+        <textarea id="area-finances-wish"></textarea>
+        <textarea id="area-finances-daily"></textarea>
+        <textarea id="area-finances-multiweek"></textarea>
+        <textarea id="area-finances-weekly"></textarea>
+        <textarea id="area-finances-monthly"></textarea>
+        <textarea id="area-finances-done"></textarea>
+        <textarea id="area-emotions-must"></textarea>
+        <textarea id="area-emotions-plan"></textarea>
+        <textarea id="area-emotions-wish"></textarea>
+        <textarea id="area-emotions-daily"></textarea>
+        <textarea id="area-emotions-multiweek"></textarea>
+        <textarea id="area-emotions-weekly"></textarea>
+        <textarea id="area-emotions-monthly"></textarea>
+        <textarea id="area-emotions-done"></textarea>
+        <textarea id="area-purpose-must"></textarea>
+        <textarea id="area-purpose-plan"></textarea>
+        <textarea id="area-purpose-wish"></textarea>
+        <textarea id="area-purpose-daily"></textarea>
+        <textarea id="area-purpose-multiweek"></textarea>
+        <textarea id="area-purpose-weekly"></textarea>
+        <textarea id="area-purpose-monthly"></textarea>
+        <textarea id="area-purpose-done"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine Fähigkeit verbessern, Entscheidungen zu treffen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich Trainiere meine Fähigkeit, mich schnell zu entscheiden. Ich stelle mir vor, es gäbe einen Entscheidungsmuskel, den ich jedes Mal stärke, wenn ich eine schnelle Entscheidung treffe. Es gibt Menschen, die schauen sich die Speisekarte 15 Minuten lang an - und dann bestellen sie Spaghetti  Bolognese. Ich nehme mir heute vor, innerhalb von 30 Sekunden zu entscheiden, was ich essen und trinken will. Selbst auf die Gefahr hin, dass ich einmal etwas essen muss, was mir nicht schmeckt. Ich treffe heute jede kleinere Entscheidung innerhalb von 30 Sekunden.\n\n2. Ich frage mich bei allen Entscheidungen: Was sind die Konsequenten, wenn ich mich so entscheide? Und: Wird die Entscheidung, die ich gerade treffe, mir und den Menschen um mich herum Glück bringen? So lern ich, in mich hinein zu hören.\n\n3. Ich beantworte mir die Frage schriftlich: Wer will ich in fünf Jahren sein? Was will ich in fünf Jahren tun? Was will ich in fünf Jahren haben? Alle meine Entscheidungen richte ich nach diesen Zielen aus. Ich bin bereit, mich von den Dingen zu trennen, die mir im Grunde gar nicht gefallen. So habe ich beide Hände frei für meine Träume.\n\n4. Ich überlege, ob es eine \"schwierige\" Entscheidung gibt, die ich seit längerem vor mir herschiebe. Ich schreibe die einzelnen Wahlmöglichkeiten auf. Dann überlege ich, ob ich mich mit erfahrenen Menschen besprechen könnte. Vor allem aber setze ich mir schriftlich eine Deadline, bis wann ich mich definitiv entschieden haben muss."}, {"title": "Lerne und wachse konstant", "text": "Ich werde heute meine Gewohnheit festigen, konstant zu lernen und zu wachsen, indem ich mich verpflichte, folgende Schritte zu unternehmen:\n\n1. Ich nehme mir vor, mindestens zwei inspirierende Bücher pro Monat zu lesen. Mit der Zeit werde ich sogar ein bis zwei Bücher pro Woche lesen.\n2. Ich überlege mir, welches Seminar ich besuchen könnte.\n3. Ich lege neben meinem Erfolgs-Journal zwei weitere Journale an: ein Erkenntnis-Journal. Hier notiere ich alle Fehler und die Lehren, die ich daraus gezogen habe. Und ein Ideen-Journal, in dem ich alle meine Ideen aufschreibe.\n4. Ich erstelle eine Liste von zehn Personen, die ich gerne kennen lernen möchte, um von ihnen zu lernen.\n5. Ich nehme mir fest vor, jeden Tag ein Capitel in diesem Buch zu lesen."}, {"title": "Erlebe den heutigen Tag bewusst", "text": "Ich erlebe heutigen Tag bewusst und nutze ihn als Chance, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Heute denke ich ganz bewusst an Menschen, die mein Leben bereichern. Ich suche besonders die Nähe einer dieser Personen und verbringe die Zeit mit ihr so, als wenn ich sie für eine lange Zeit nicht wiedersehen würde.\n2. Sollte ich heute im Stau stehen oder mir sonst etwas Widriges zustoßen, so vertausche ich Frustration mit Faszination. Das Schlimmste, was mir heute widerfahren kann, ist, einen Wundervollen Tag zu erleben.\n3. Ich schreibe mir heute 25 Dinge auf, für die ich dankbar bin. Dadurch werde ich das Leben noch mehr lieben und mich reich fühlen. Statt sinnlos Zeit mit Warten zu vergeuden, nutze ich heute Pausen, um mich an noch mehr Punkte zu erinnern, für die ich dankbar sen kann. Auf diese Weise wird heute jedes Warten zu einem Geschenk.\n4. Der heutige Tag ist nicht, wie er ist, sondern er ist das, was ich aus ihm mache. Ich beschließe darum jetzt, den heutigen Tag als eine Chance zu sehen und ihn als solchen zu nutzen. Jeden einzelnen Moment werde ich heute als Bereicherung sehen. Jede Begegnung als ein Geschenk. Jede Minute als eine Gelegenheit. Jede Sekunde mit einem lieben Menschen als ein Wunder."}, {"title": "Konzentriere dich auf EPAs", "text": "Ich werde heute den Prozentsatz meiner Einkommensproduzierende Aktivitäten verbessern, indem ich mich verpflichte, die folgenden Schritte durchzuführen:\n\n1. Ich überlege, wie ich meine Zeit gestern verbracht habe. Ich mache mir bewusst, dass sich nicht viel ändern wird, wenn ich meine EPAs nicht gezielt plane. Ich frage mich: Was kann ich heute konkret tum, um stärker in den Bereichen zu arbeiten, die mein Einkommen bestimmen?\n2. Ich finde heraus, wie viele EPAs ich in meinem Geschäft innerhalb einer Woche oder eines Monats durchführen muss, um auf der ganz sicheren Seite zu sein. Sobald ich diese Zahl kenne, treffe ich den Entschluss, drei Monate lang SINALOA für mich arbeiten zu lassen.\n3. Wenn ich gerade einen Sommer erlebe, dann weiß ich, dass ein Winter kommen wird. Ich weiß, dass jetzt Zeit ist, die Ernte einzufahren. Darum verdoppele ich jetzt meine Anstrengungen. Ich beschließe, mich durch keinen Winter von meinen Zielen abbringen zu lassen.\n6.  Um einen Winter überstehen zu können, muss ich mich gut vorbereiten. Ich entschließe mich, jeden Tag ein Kapitel in diesem Buch zu lesen. Darüber hinaus beschließe ich, Seminare zu besuchen, um als Persönlichkeit zu wachsen."}, {"title": "Werde zu einer Persönlichkeit", "text": "Da ich stärkere Persönlichkeit werden möchte, will ich wachsen, in dem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich betrachte meinen Job bzw. meine Firma als mein Vehikel zu einer erfolgreicheren Persönlichkeit und zu besseren Umständen. Darum arbeite ich mit großer Energie und Begeisterung. Ich setze alles daran, um etwas zu werden -  durch mein Werk.\n2. Ich will meine Fehler nicht wiederholen und aus ihnen lernen. Darum beginne ich ein „Erkenntnis Journal“ Ich notiere alles, was ich aus meinen Fehlern - und denen anderer Menschen - lernen kann.\n3. Ich lese Literatur, die meinem um mich auf die Dauer kein anderer Mensch geben. Ich beantworte die Frage schriftlich: \"Wer wird davon profitieren, wenn ich ein erstrebenswertes Ziel erreicht habe?\"\n4. Ich schreibe heute unbedingt in t Erfolgs-Journal fünf Dinge auf, die mir gut gelungen sind."}, {"title": "Tue es einfach", "text": "Heute trainiere ich meine alles entscheidende Fähigkeit zu handeln, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich notiere alles, was ich vor mir herschiebe, auf einer Liste und überlege, was ich davon heute erledigen sollte.\n2. Ich schaue heute in mein Traumalbum. Habe ich für alle fünf Bereiche des Lebens (Gesundheit, Beziehungen, Finanzen, Emotionen und Job) Ziele, und kommen diese in Form von Bildern in meinem Traumalbum vor?\n4. Ich lege ein Journal an, in dem ich alle schriftlichen Praxisübungen aus diesem Buch machen kann. Auf diese Weise geht mir nichts verloren und ich kann meine Fortschritte erkennen.\n5. Ich frage mich: Schiebe ich etwa vor mir her, weil ich den Zeitpunkt für nicht richtig halte? Kann es sich dabei um eine Ausrede handeln?"}, {"title": "Gehe richtig mit Stress um", "text": "Heute werde ich meine Fähigkeit verbessern, mit Stress umzugehen, indem ich mich verpflichte, folgende Schritte umzusetzen:\n\n1. Wenn das Telefon klingelt, nehme ich das als Signal, auf meine Schultern und meinen Unterkiefer zu achten, Sollte ich Anspannung erkennen, atme ich sofort langsam aus und senke dabei meine Schultern. Das wiederhole ich mehrere Male.\n2. Heute werde ich mich beim Essen nur auf das Essen konzentrieren. Ich werde eine Kerze anzünden und Blumen auf den Tisch stellen. Ich sorge für leise Musik und lasse mir Zeit. Ich werde die Mahlzeit richtig genießen.\n3. Ich werde mich heute voll auf meine Gesprächspartner konzentrieren. Ich werde auf das achten, was sie sagen und wie sie es sagen. Und ich werde in ihrem Gesicht zu lesen versuchen, warum sie das sagen.\n4. ich nehme mir aus der Liste des 24 Regeln diejenigen heraus, die mir besonders helfen können, entspannt und ruhig zu sein, und hänge sie für mich sichtbar auf. Sollte ich heute negativen Stress empfinden, so schaue ich sogleich auf meine Liste.\n5. Ich setze mich heute 15 Minuten ruhig und bequem hin und tue NICHTS"}, {"title": "Lerne, Schwierigkeiten zu meistern", "text": "Heute werde ich meine Fähigkeiten verbessern, Schwirigkeiten zu meistern  in dem ich mich für folgende Schritte verpflichte:\n1. Heute gebe ich auf keinen Fall auf. Ich weiß, dass es viele Formen des Aufgebens gibt. Heute werdoe ich darum alles, was ich mir vornehme, umsetzen.\n2. Ich überdenke meine Einstellung zu Problemen und stelle fest: Ich alleine treffe die Entscheidung, wie ich damit umgehen. Vielleicht werde ich Schwierigkeit mich beim ersten Hinsehen willkommen heißen. Aber mit dem zweiten Gedanken erkenne ich, das Herausforderungen in meinem Leben das Material darstellen, aus dem ich meine Treppe zum Erfolg bauen kann.\n3. Ich rede so schnell wie möglich mit einem Gewinner, der eine ähnliche Situationen bereits gemeistert hat, und frage ihn um Rat.\n4. Ich schreibe auf, welche Schwierigkeiten ich bereits überwunden habe. So gewinne ich Zuversicht für die Zukunft.\n5. Ich beginne ein Journal, in dem ich alle wichtigen Lektionen meines Lebens notiere. So lerne ich aus Fehlern und Schwierigkeiten."}, {"title": "Erfinde das Rad nicht neu", "text": "Ich werde heute die Strategien der Erfolgreichen meiner Branche umsetzen, indem ich mich verpflichte, folgende Schritt zu unternehmen:\n\n1. Ich finde heraus, welche die fundamentalen Fertigkeiten in meiner Branche sind. Inwieweit beherrsche ich mein Handwerkzeug? Ich erstelle mir schriftlich einen Aktionsplan über die Fertigkeiten, die mir fehlen. Diesen bespreche ich mit einem  Menschen, der in meiner Branche großen Erfolg hat.\n2. Ich überprüfe mich, ob ich mich in irgendeinem Gebiet meines Lebens in der Teenager-Phase befinde. Dies würde meinem Anspruch, ansetzen, um wieder lernwillig zu sein.\n3. Bei Problemen frage ich mich, wer bereits ein ähnliches Problem gemeistert hat. Ich suche Rat bei dieser Person.\n4. Ich frage mich, ob ich heute Dinge tun wollte, für die ich entweder überqualifiziert oder unterqualifiziert bin. Ich lasse mir heute von Experten helfen."}, {"title": "Entwickle Momentum", "text": "Ich werde heute Momentum entwickeln, indem ich mich verpflichte, folgende Schritte durchzuführen:\n\n1. Ich treffe die bewusste Entscheidung, so lange mit aller mir möglichen Anstrengung zu arbeiten, bis ich Momentum erreich habe. Ich verstehe, dass dies ökonomisch und klug ist.\n2. Heute arbeite ich mit aller Disziplin, Denn mir ist bewusst, dass Disziplin der Schlüssel zum Aufbau von Momentum  ist.\n3. Ich schaue heute nicht so sehr auf die Ergebnisse. Denn ich weiß, dass die Ergebnisse sich automatisch einstellen, wenn ich genügend Momentum aufgebaut habe. Ich warte auch nicht auf bessere Umstände, denn ich weiß, dass Momentum diese besseren Umstände erst schafft.\n4. Ich fertige eine Liste von den Bereichen an, in denen ich Momentum entwickelt habe. Momentum arbeitet für mich, aber auch gegen mich. Ich schreibe auf, auf welchen Gebieten ich neben meinem Job Momentum entwickeln will: Sport, Essgewohnheiten, Familienleben, Lesen, Umgang mit Geld..."}, {"title": "Träume und lebe deinen Traum", "text": "Ich werde mich heute stärker als Gestalter meiner Zukunft betätigen und verpflichte mich zu folgenden Schritten:\n\n1. Ich werde mir heute eine Auszeit nehmen. Ich setze mich hin oder gehe nur mit der halben Schrittgeschwindigkeit spazieren. Ich finde Ruhe und höre auf meine innere Stimme.\n2. Ich überlege, wie viel sich in meinem Leben in den letzten sieben Jahren ereignet hat. Was habe ich alles an Neuem kennen gelernt, wie viel habe ich getan, wie viel erworben, wie viele neue Menschen kennen gelernt? Wie hat sich meine Persönlichkeit entwickelt und was habe ich alles erlebt? Ich mach mir bewusst, dass sich in den nächsten sieben Jahren genauso viel ereignen kann.\n3. Ich frage mich: Wenn ich wirklich die Wahl hätte, was würde ich gerne tun und sein? Was sind meine Träume? Wer will ich in sieben Jahren sein und was will ich tun? Ich schreibe meine Gedanken dazu auf. Es kann mir helfen, wenn ich mich frage, was ich so richtig gerne tue und was davon meinen Talenten entspricht.\n4. Ich erkenne, dass ich tatsächlich die Wahl habe. Ich kann jederzeit das Leben kreieren, das auch morgen meiner würdig ist. Ich bin der Designer meines Lebens. Ich habe den Mut, glücklich zu sein."}, {"title": "Achte auf deinen Körper", "text": "Heute werde ich auf meinen Körper achten, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Heute esse ich achtsam. Das heißt, ich esse weniger und dafür langsamer, achte darauf, was ich zu mir nehme, und kaue länger und gründlicher. Heute esse ich mehr Früchte und Salat. Wenn ich Hunger auf Snacks habe, dann kaufe ich mir heute Nüsse und Obst.\n2. Ich jogge heute mindestens 35 Minuten. Wann ich joggen gehe, dann überanstrenge ich mich nicht. Sobald es mir zu anstrengend wird, gehe ich ein Stück. Ich muss niemandem etwas beweisen. So habe ich Spaß am Joggen.\n3. Heute unterbreche ich meine Arbeit jeweils spätestens nach 90 Minuten und mache eine kurze Bewegungspause. Ich gehe dann für fünf Minuten an die frische Luft oder mache ein paar Fitnessübungen. Auf diese Weise habe ich mehr Energie und kann mich besser konzentrieren. Insgesamt schaffe ich so viel mehr.\n4. Ich vereinbare heute, mich von einem guten Arzt einmal richtig durchchecken zu lassen. ."}, {"title": "Lass dich von Ablehnung nicht entmutigen", "text": "Ich werde heute den richtigen Umgang mit Ablehnung trainieren, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Heute werde ich jeden Erfolg schriftlich festhalten. Ich frage mich nicht nur, was mir gut gelungen ist, sondern auch, warum es mir gut gelungen ist.\n\n2. Jede Ablehnung streife ich sofort ab wie Staub. Ich verstehe, dass es immer eine Gruppe gibt, die ablehnt, was ich tue. Das akzeptiere ich. Ich nehme es auch nicht persönlich.\n\n3. Ich weiß, dass ich die Menschheit nicht verändern kann. Ich konzentriere mich auf die Dinge, die ich kontrollieren kann: Ich erhöhe meine Qualität und arbeite an meiner Einstellung.\n\n4. Heute spreche ich gezielt mit Menschen, die sich über positive Dinge und Erfolge unterhalten. Sobald jemand heute von negativen Erfahrungen sprechen will, gehe ich weg. Und auch ich werde heute nur über Positives reden. Ich weiß: Über Negatives reden ist wie Dünger auf Unkraut gießen."}, {"title": "Gib 110 Prozent", "text": "Heute werde ich meine Fähigkeit verbessern, 110 Prozent zu geben, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Heute werde ich bei mindestens einer Tätigkeit, die ich ausübe, 110 Prozent geben.\n2. Ich werde heute keine Grenze akzeptieren. 100 Prozent ist eine fiktive Vorstellung von meinem Leistungsvermögen, das nicht der Wahrheit entspricht. Ich will der Beste werden, der ich sein kann. Wenn ich nicht kann, dann muss ich.\n3. Da das Bild, das ich von mir habe, nicht der Wahrheit entspricht, kann ich es ersetzen durch das Bild, wie ich sein möchte. Ein solches Bild lässt Grenzen nicht zu. Ich beschreibe heute schriftlich, wie ich sein möchte. Dann stelle ich mir vor, bereits jetzt so zu sein. Ich benehme mich auch so.\n4. Wer nach der 110 -Prozent-Regel lebt, muss häufiger Pausen machen. Darum arbeite ich heute konzentriert und plane auch meine Freizeit und meine Pausen"}, {"title": "Wachse an deinen Problemen", "text": "Heute werde ich meine Fähigkeit verbessern, mit Problemen umzugehen, indem ich mich verpflichte, folgende Schritte umzusetzen:\n\n1. Sobald heute ein Problem auftaucht, konzentriere ich mich sofort auf die Lösung. Ich lese sofort die sechs Schritte zur Problemlösung.\n2. Ich mache mir bewusst, dass ich wahrscheinlich nicht der Erste bin, der dieses Problem hat. Ich suche mir die Vorbilder, die sich in einer ähnlichen Situation erfolgreich verhalten haben, und lerne von ihnen.\n3. Ich verstehe, dass das eigentliche Problem meist meine Sicht des Problems ist. Es ist wie bei Pfannkuchen. Alle Pfannkuchen haben eines gemeinsam: zwei Seiten. Es gibt an allem eine hellere und eine dunklere Seite. Ich frage mich darum heute: Was ist an meinem Problem gut?\n4. Ich weiß, dass ich an Problemen wachse. Ich weiche ihnen deshalb nicht aus Jedes Mal, wenn ich ein Problem gemeistert habe, suche ich mir die nächste Herausforderung. Probleme werden für mich zu einer Art Sport."}, {"title": "Sei Chef und Angestellter in einer Person", "text": "Heute werde ich meine Fähigkeit verbessern, Chef und Angestellter in einer Person zu sein, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich weiß, dass mein Erfolg als Selbständiger davon abhängt, ob ich Disziplin zu entwickeln, Jedes einzelne Detail ist dabei wichtig. Heute halte ich alle meine Pläne minutiös ein.\n2. Ich beschließe, Chef und Angestellter in einer Person zu sein. Ich bin hart gegen mich selbst, Ich kontrolliere mich, wie ein Chef seinen Angestellten überprüfen würde. Ich sehe nicht ein, warum ich härter für jemand anderen arbeiten sollte als für mich selbst. Ich weiß, wenn ich mich nicht selbst kontrollieren kann, dann werden es andere tun. Entweder ich kann auf mich selbst hören, oder ich muss auf andere hören.\n3. Am Ende eines jeden Arbeitstages überprüfe ich selbstkritisch meine Ergebnisse. Da ich - wie jeder Mensch - die Tendenz habe, mich selbst zu belügen, notiere ich alle meine Ergebnisse und EPAs schriftlich.\n4. Da kein Mensch sein ganzes Leben lang diszipliniert sein kann, plane ich alle zwei Wochen einen \"Gammel-Tag\". An diesem Tag mache ich, was ich will, ich esse, was ich will, ich schlafe, so lange ich will ... Ich mache Ferien von aller Disziplin, und das ist völlig in Ordnung so, weil ich es ja geplant habe. Während der anderen Tage aber bin ich völlig diszipliniert. Wenn ich in Gefahr kommen sollte, schwach zu werden, erinnere ich mich daran, dass der nächste Gammel-Tag bald vor der Tür steht. Das gibt mir die Kraft, diszipliniert zu sein."}, {"title": "Setze dir große Ziele", "text": "Heute werde ich die Macht der Ziele noch besser für mich nutzen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich überdenke meine langfristigen Ziele und überlege mir, ob ich sie nicht höher setzen sollte. Nichts beeinflusst mein Leben mehr als meine langfristigen Ziele. Je höher diese Ziele sind, desto spannender und reicher wierd mein Leben sein.\n2. Menschen, die nichts von großen Zielen verstehen, werde ich davon nicht unterrichten, Ich würde nur nutzlose Diskussionen ernten, die mir Kraft rauben und möglicherweise Zweifel in mir wecken. Vielmehr überlege ich, wo die Menschen sind, die mir beim Erreichen meiner Ziele helfen können,\n3. Damit diese Ziele nicht zu abstrakt bleiben, lege ich ein Traumalbum an, in das ich alle meine Träume in Form von Bildern (z.B. Ausschnitte aus Magazinen, Fotomontagen, Zeichnungen ...) einklebe. Wenn ich dieses Album täglich anschaue, wird es für mich zu einem absoluten Muss, diese Ziele zu erreichen.\n4. Ich teile meine kurzfristigen Ziele in A, B und C ein. Kurzfristigere A-Ziele muss ich erreichen. Darum setze ich sie mir so, dass ich sie mit Anstrengung immer erfüllen kann. So stärke ich mein Selbstbewusstsein für größere Ziele.\n5. Ich höre in mich hinein: Bin ich bereit, mir ein langfristiges Ziel zu setzen, das ich eigentlich zu meinen Lebzeiten nicht erreichen kann?"}, {"title": "Gib anderen, was sie brauchen", "text": "Heute will ich meine Fähigkeit verbessern, anderen zu geben, was sie brauchen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich mache mir heute wieder bewusst, dass Liebe die intelligenteste und energiesparendste Möglichkeit ist, um zu leben. Ich beschließe darum heute, den Menschen das zu geben, was sie brauchen.\n2. Ich mache einen Check: Wie steht es um meine \"Beziehungskonten\" mit den fünf wichtigsten Menschen in meinem Leben? Ich frage mich, was ich heute tun kann, um \"Einzahlungen\" vorzunehmen.\n3. Ich lebe heute wieder nach den goldenen Regeln. Ich weiß: Wenn ich die goldenen Regeln zu einem festen Bestandteil meines Lebens machen möchte, muss ich sie so oft wie möglich lesen. Darum werde ich die goldenen Regeln fotokopieren und an die Pinnwand hängen beziehungsweise immer bei mir tragen. Ich lese sie heute vor jedem wichtigen Gespräch.\n4. Ich notiere kurz meine Einstellung zu bestimmten Personen. Wenn ich diese Übung wiederhole, kann ich meine Notizen vergleichen. Wer eine Zeit lang nach den goldenen Regeln gelebt hat, bemerkt eine Veränderung in sich. Man beginnt, immer mehr Menschen aufrichtig zu mögen. Die goldenen Regeln sind zum Selbstzweck und zum inneren Bedürfnis geworden.\n5. Wenn ich in einer Partnerschaft lebe, so gehe ich heute mit meinem Partner aus. Dabei benehme ich mich genauso aufmerksam, höflich und charmant, als wenn ich das erste Mal mit dieser Person ausgehen würde. Ich kreiere einen \"Magic Moment\", einen Zaubermoment."}, {"title": "Lass dich nicht ablenken", "text": "Heute werde ich meine Fähigkeit verbessern, mit Ablenkungen umzugehen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich werde heute keine Ausrede benutzen. Ausreden lenken nur von mir ab. Ich will Macht über mein Leben an Umstände oder an andere Menschen abgebe. Ich will meine Energie dafür einsetzen, dass ich mein Ziel erreiche und nicht, um Ausreden zu finden.\n2. Ich werde mich durch Ablenkung nicht dazu verleiten lassen, meine Ziele aufzugeben. Ich führe heute die Aktivitäten durch, die ich mir vorgenommen habe.\n3. Da ich immer mit unvorhergesehenen Ablenkungen rechnen kann, werde ich heute einen bestimmten Zeitraum für solche Dinge blocken Ich erreiche damit, dass sich die Ablenkungen nach mir richten müssen, und nicht ich mich nach den Ablenkungen.\n4. Sollte eine unvorhergesehene Ablenkung auftreten, so nutze ich diese als Chance für einen Kurzcheck. Ich frage mich, ob ich meine Zeit gerade optimal nutze."}, {"title": "Sei ein produktives Vorbild", "text": "Heute trainiere ich die Fähigkeit, ein produktives Vorbild zu sein, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich werde heute dafür Sorge tragen, dass ich in der Produktions-Phase bleibe.\n2. Ich mache mir einen Plan, der mir hilft, alle drei Tage mindestens ein konkretes Ergebnis zu produzieren. Ich halte mich ab heute an die Drei-Tage-Regel.\n3. Um meine neuen Angestellten optimal zu unterstützen , werde ich sie mindestens alle drei Tage in irgendeiner Form ermutigen und mit ihnen in Kontakt treten, Diese Unterstützung benötigen Mitarbeiter, bis sie selbst nach der Drei-Tage-Regel leben können. Aber auch danach kann es nützlich sein, weiterhin spätestens alle drei Tage in irgendeiner Form von mir hören zu lassen.\n4. Zu meinen wichtigsten Führungsaufgaben gehört Führen durch Vorbild. Ich frage mich heute: Würde ich mich selbst als Chef haben wollen?\n5. Ich prüfe mich heute kritisch: Sonne ich mich in meinen vergangenen Erfolgen, oder verstecke ich mich hinter Visionen? Visionen sind gut aber sich müssen durch Handlungen ausgefüllt werden."}, {"title": "Beginne alles Wichtige so schnell wie möglich", "text": "Heute werde ich meine Fähigkeit verbessern, alles Wichtige so schnell wie möglichst zu beginnen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Am Morgen frage ich mich: \"Was mag ich nicht so sehr?\" Diese Dinge erledige ich als Erstes. So erhalten die unangenehmen Dinge kein unnötiges Gewicht. Je eher ich sie erledigt habe, umso schöner wird mein Tag, weil ich dann nur noch die angenehmen Dinge vor mir habe.\n2. Als Nächsten frag ich mich: Was ist heute meine wichtigste Aufgabe? Ich beginne dass sofort mit der Umsetzung und lasse mich durch nichts ablenken, bis ich diese Aufgabe erledigt habe. Selbst wenn ich an diesem Tag nichts anderes mehr tue, so weiß ich doch, dass ich das Wichtigste erledigt habe.\n3. Ich frage mich: Was kann ich in meinem Leben verändern, so dass ich mehr Zeit für die wichtigen Dinge habe, anstatt mich um dringlich gewordene Dinge kümmern zu müssen?\n4. Was auch immer ich mir vornehme, beginne ich innerhalb von 72 Stunden. Ich mache mindestens einen ersten Schritt. Ich mache es heute zu einem Sport, alle anderen mit meiner Schnelligkeit zu überraschen. Ich handle heute nach dem Prinzip: SSWIM.\n5. Ich überprüfe, ob ich in die Perfektionismus-Falle geraten bin. Wo könnte und sollte ich ein Projekt beenden?"}, {"title": "Übernimm die volle Verantwortung", "text": "Heute werde ich trainieren, volle Verantwortung für mein Leben zu übernehmen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Heute gebe ich keiner Person und keinen Umständen die Schuld. Denn wem ich die Schuld gebe, dem gebe ich die Macht. Ich möchte aber Herr über mein Leben sein.\n\n2. Wenn ich in Versuchung komme, eine Situation als zu schwierig zu empfinden, dann schließe ich meine Augen und stelle mir eine Person vor, die besonders stark ist. Ich frage mich: Was würde diese Personb wohl von dieser Situation halten und wie würde sie handeln?\n\n3. Wenn ich heute ein Ziel nicht erreiche, dann übernehme ich auch dafür die Verantwortung. Genauso übernehme ich die Verantwortung, wenn mir etwas sehr gut gelingt. Ich werde dann nicht das Schicksal oder andere Menschen, die mir geholfen haben, verantwortlich machen. Vielmehr empfinde ich Stolz und Freude über meinen Erfolg. So baue ich mein Selbstbewusstsein weiter aktiv auf.\n\n4. Wenn sich mir gegenüber heute jemand aggressiv verhält, dann frage ich mich, ob ich etwas getan habe, das ihn verletzte oder ängstigte. Ich überprüfe auch, ob meine Erwartungen übertrieben sind."}, {"title": "Lerne, mit Angst umzugehen", "text": "Heute werde ich meine Fähigkeit verbessern, mit der Angst umzugehen, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Sobald ich von Angst \"überfallen\" werde, lese ich sofort die zehn Punkte zum Umgang mit Angst.\n\n2. Ich schreibe heute mindestens fünf Punkte auf, für die ich dankbar bin. Ich verstehe, dass chronische Angst nicht etwas Willkürliches ist, sondern dass ich entscheide, was ich mit ihr mache. Ich kann sie mit Dankbarkeit überstrahlen, wann immer ich will.\n\n3. Heute will ich eine andere Betrachtungsweise in Bezug auf Angst annehmen. Ich erkenne Angst als einen nützlichen Antrieb zu meinen Erfolg. Ein wenig Angst zeigt mir, dass ich mich strecke und wachse. Wenn ich keine Angst vor dem nächsten Schritt hätte, dass wäre dieser Schritt eine Nummer zu klein für mich.\n\n4. Heute nehme ich mich, meine Wünsche und Ängste nicht zu wichtig. Ich bin nur ein Teil des Ganzen."}, {"title": "Konzentriere dich auf deine Stärken", "text": "Ich werde heute meinen Fähigkeit trainieren, mich auf meine Stärken zu konzentrieren, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ich mache mir bewusst, dass mein Erfolg nicht so sehr von meinen Talenten abhängt, sondern davon, was ich daraus mache. Ich hadere nicht mit meinem Schicksal.\n\n2. Ich erstelle eine Liste mit allen meinem Stärken und Schwächen. Für meine Schwächen finde ich eine Lösung. Ich konzentriere mich darauf, meine Stärken auszubauen, indem ich mich mit Menschen umgebe, die mich fördern können.\n\n3. Ich betrachte meine gesamte Lebenssituation und überlege mir, was ich änder kann. Dann lege ich mir einen Plan zurecht. Was getan werden kann, schiebe ich nicht auf, sondern tue es sofort.\n\n4. Mit den Dingen, die ich nicht ändern kann, finde ich mich ab. Ich lächele heute auch, wenn es regnet, denn ich weiß, wenn ich nicht lächle, wird es trotzdem regnen.\n\n5. Ich überprüfe, ob ich neidisch oder eifersüchtig bin. Diese Gefühle lasse sich nicht verdrängen. Aber ich kann sie überstrahlen, indem ich mich auf meine Einzigartigkeit und mein Potenzial konzentriere. Ich beantworte mir heute die Frage schriftlich: \"Warum weiß ich, dass ich einzigartig bin?\""}, {"title": "Gib und vergib", "text": "Heute übe ich mich in der Kunst zu geben und zu vergeben, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Jeden, den ich heute treffe, mit dem ich telefoniere oder an den ich denke, segne ich und wünsche ihr oder ihm Freude, Glück, Erfolg, Gesundheit und Spaß. Ich sende ihm positive Energie.\n\n2. Jedem Menschen, den ich heute besuche, bringe ich ein Geschenk mit. Ich bringe ihm etwas Materielles, gute Wünsche, gut durchdachte Komplimente oder eine Idee. All dies wird dem anderen zeigen, dass ich ernsthaft an ihrem oder seinem Wohl interessiert bin. Ich praktiziere und demonstriere Überfluss.\n\n3. Meinem liebsten Menschen mache ich heute ein außergewöhnlich durchdachtes Geschenk. Ich tue das, weil ich einfach Spaß an ihrer oder seiner Freude habe.\n\n4. Ich schenke heute Vergebung. Dieses Geschenk mache ich vor allen mir selbst. Ich überlege, gegen wen ich Groll hege. Ich vergebe dieser Person in meinem Herzen. Dann rufe ich diese Person an oder schreibe ihr heute einen Brief - am besten sofort. Heute werde ich gegen niemanden negative Gefühle hegen. Ich befreie mich damit selbst."}, {"title": "Gehe klug mit deinem Geld um", "text": "Heute will ich meinen Umgang mit Geld optimieren, indem ich mich zu folgenden Schritten verpflichte:\n\n1. Ab heute werde ich immer mindestens 10 Prozent meines Nettoeinkommens sparen. Denn ich weiß, dass mich nur das Geld vermögend macht, das ich erhalte. Für Einkommen aus selbständiger Arbeit lege ich jeden Monat einen bestimmten Prozentsatz für die Steuer weg.\n2. Ich richte ein Kontensystem ein, das automatisch für mich spart. Als Selbständiger trenne ich zusätzlich meine Firmenkosten und meine privaten Kosten, indem ich zwei unterschiedliche Konten einrichte, Ich zahle mir ein festes Gehalt, das ich von meinem Firmenkonto auf mein Privatkonto überweise. Ich lerne, von maximal 45 Prozent meines Gewinns zu leben.\n3. Heute werde ich sparsam sein. Ich frage mich heute bei jeder Ausgabe: Ist das wirklich nötig?\n4. Ich überlege, wo ich heute mit einer Spende helfen kann."}, {"title": "Errichte geduldig dein Fundament", "text": "Ich werde heute beginnen, geduldig mein Fundament zu errichten, indem ich mich zu folgenden Schritten verpflicht:\n\n1. Ich verstehe, dass kein Gebäude ohne ein solides Fundament gebaut werden sollte. Darum bin ich sehr aktiv, was mein Momentum angeht, und halte mich an meine tägliche Arbeitsmethode. Aber was meine Ergebnisse angeht, bin ich geduldig. Ich weiß, dass jedes große Gebäude Stein für Stein errichtet wird.\n\n2. Ganz gleich, was geschieht: Ich gebe heute nicht auf. Ich weiß, dass ich jedes Mal, wenn ich einen Vorsatz nicht umsetze, aufgegeben habe. Ich setze heute alles um, was ich mir vornehme. Heute halte ich durch.\n\n3. Ich setze auf große Siege statt auf kleine Gewinne. Für das nächste Jahr setze ich mir keine übergroßen Ziele - gebe aber 110 Prozent. Für das nächste Jahrzehnt kenne ich keine Grenzen. Ich überlege heute, ob ich nicht mein Zehn-Jahres-Ziel höher setzen sollte.\n\n4. Langzeit gibt es nicht nur im Job, sondern beispielsweise auch im Sport oder in der Partnerschaft - auch hier meint mancher auf eine \"Präsentation\" hereingefallen zu sein. Ich überlege, ob ich dabei bin, in irgendeinem Bereich meines Lebens aufzugeben, weil ich die Langzeit unterschätzt habe."}, {"title": "Umgib dich mit Vorbildern", "text": "Heute werde ich dafür Sorge tragen, dass ich mich mit Vorbildern umgebe, von denen ich lernen kann, und verpflichte mich zu folgenden Schritten:\n\n1. Ich will mich heute mit einem Menschen unterhalten, der etwas erreicht hat, das ich erreichen möchte.\n2. Ich will mich von positiven Dingen programmieren lassen. Darum werde ich heute auch keinen wertlosen Fernsehfilm anschauen und mich auch nicht den ganzen Tag von Radiomusik berieseln lassen, Heute wähle ich bewusst aus, was ich \"aufnehme\".\n3. Ich nehme mir vor, jeden Monat eine Persönlichkeit kennen zu lernen, von der ich lernen kann.\n4. Ich überlege, wie ich die Menschen in meinem Bekanntenkreis fördern kann, Ich tue dies klug und ohne belehrend zu wirken. Ich frage mich kritisch: Wie beeinflusse ich andere? Bin ich Vorbild oder Warnung?"}, {"title": "Akzeptiere Unzufriedenheit als treibende Kraft", "text": "Ich akzeptiere heute meine Unzufriedenheit als eine gute, treibende Kraft und verpflichte mich zu folgenden Schritten:\n\n1. Ich sage laut mindesten fünf Dinge, für die ich im Moment dankbar bin. Jedes Mal, wann ich mich auf diese Übung konzentriere, verschwinden meine Angstgefühle.\n\n2. Ich stehe zu meiner Unzufriedenheit, denn sie ist eine entscheidende, treibende Kraft in mir. Zufriedenheit lässt und stillstehen und langsam sterben. Unzufriedenheit bringt Großes hervor und lässt mich richtig leben. Darum schreibe ich mir heute drei Dinge auf, die ich unbedingt erreichen will,\n\n3. Ich versuche nicht, andere von dem Konzept der Unzufriedenheit zu überzeugen, Ich akzeptiere, dass jeder ein Recht darauf hat, so zu leben, wie er es für richtig hält. Aber ich schäme mich auch nicht für meine Unzufriedenheit.\n\n4. Ich weiß, dass meine Firma nur wachsen kann, wenn ich andere Menschen davon begeistern kann, mit mir zusammenzuarbeiten. Heute halte ich darum Ausschau nach unzufriedenen Menschen, denen ich eine gute Chance bieten kann."}, {"title": "Sei ein Adler und keine Ente", "text": "Heute werde ich meine Fähigkeit ausbauen, wie ein Adler zu leben, in dem ich mich zu folgendem Schritten verpflichte:\n\n1. Ich beschließe jetzt, das Buch sofort wieder von vorne zu lesen. Jeden Tag ein Kapitel. Die Kapitel, die mich momentan nicht so sehr beschäftigen, überspringe ich.\n\n2. Ich lese heute ungestört das Nachwort und denke darüber nach.\n\n3. Ich fordere meine Umwelt. Ich setze hohe Erwartungen in die Menschen, die mir etwas bedeuten. Dadurch bin ich vielleicht nicht für alle bequem aber ich bringe Menschen zum Fliegen.\n\n4. Ich überlege, wie mein Idealbild von einem Gewinner aussieht. Indem ich schreibe, finde ich Zugang zu meinen eigenen tiefen Gedanken und Werten.\n\n5. Ich erkenne, dass es keine endgültigen \"Gesetze der Gewinner\" geben kann, sondern dass ich mich an meinen Werten orientieren muss, um meine eigenen Gesetze als Wegweiser für mein Leben festzulegen."}];
+    const areaConfigs = [
+      { key: 'health', title: 'Gesundheit', summaryField: 'weeklyHealth' },
+      { key: 'relationships', title: 'Beziehungen', summaryField: 'weeklyRelationships' },
+      { key: 'finances', title: 'Finanzen', summaryField: 'weeklyFinances' },
+      { key: 'emotions', title: 'Emotionen', summaryField: 'weeklyEmotions' },
+      { key: 'purpose', title: 'Lebenssinn/Job/Spirit', summaryField: 'weeklyPurpose' },
+    ];
+    const areaSectionConfigs = [
+      { key: 'must', title: 'A = Tun / Muss' },
+      { key: 'plan', title: 'B = Geplant, aber kein Muss' },
+      { key: 'wish', title: 'C = Wünschenswert / nicht vergessen' },
+      { key: 'daily', title: 'Täglich' },
+      { key: 'multiweek', title: 'Mehrmals pro Woche' },
+      { key: 'weekly', title: 'Wöchentlich' },
+      { key: 'monthly', title: 'Monatlich' },
+      { key: 'done', title: 'Umgesetzt' },
+    ];
+    const strategyFields = ['mottoLong', 'focusWeek', 'identityBlock', 'missionBlock', 'valuesBlock', 'goalLong10', 'goalMid25', 'goalShort1', 'priorityWeek', 'weeklyHealth', 'weeklyRelationships', 'weeklyFinances', 'weeklyEmotions', 'weeklyPurpose', 'weeklyJoy', 'weeklyLearning', 'weeklySuccessJournal', 'weeklySuccessMove'];
+    areaConfigs.forEach(area => areaSectionConfigs.forEach(section => strategyFields.push(`area_${area.key}_${section.key}`)));
+    const dailyFields = ['date', 'displayDate', 'chance', 'gratitude', 'task', 'lawAction', 'success1', 'success2', 'success3', 'success4', 'success5', 'taskStatus', 'taskWhy', 'lawStatus', 'lawWhy'];
+    const weeklyDayKeys = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
+    const ids = {
+      date: 'entryDate', displayDate: 'displayDate',
+      mottoLong: 'mottoLong', focusWeek: 'focusWeek', identityBlock: 'identityBlock', missionBlock: 'missionBlock', valuesBlock: 'valuesBlock', goalLong10: 'goalLong10', goalMid25: 'goalMid25', goalShort1: 'goalShort1', priorityWeek: 'priorityWeek',
+      chance: 'chance', gratitude: 'gratitude', task: 'task', lawAction: 'lawAction',
+      success1: 'success1', success2: 'success2', success3: 'success3', success4: 'success4', success5: 'success5',
+      taskStatus: 'taskStatus', taskWhy: 'taskWhy', lawStatus: 'lawStatus', lawWhy: 'lawWhy',
+      weeklyHealth: 'weeklyHealth', weeklyRelationships: 'weeklyRelationships', weeklyFinances: 'weeklyFinances', weeklyEmotions: 'weeklyEmotions', weeklyPurpose: 'weeklyPurpose',
+      weeklyJoy: 'weeklyJoy', weeklyLearning: 'weeklyLearning', weeklySuccessJournal: 'weeklySuccessJournal', weeklySuccessMove: 'weeklySuccessMove'
+    };
+    areaConfigs.forEach(area => areaSectionConfigs.forEach(section => {
+      ids[`area_${area.key}_${section.key}`] = `area-${area.key}-${section.key}`;
+    }));
+    weeklyDayKeys.forEach(day => {
+      ids[`weekly_${day}_activity`] = `weekly-${day}-activity`;
+      ids[`weekly_${day}_goal`] = `weekly-${day}-goal`;
+    });
+    const fields = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, document.getElementById(id)]));
+    const weekLabel = document.getElementById('weekLabel');
+    const weekToggleBtn = document.getElementById('weekToggleBtn');
+    const dailyView = document.getElementById('dailyView');
+    const weeklyView = document.getElementById('weeklyView');
+    const weeklyOverviewCard = document.getElementById('weeklyOverviewCard');
+    const weekDaysGrid = document.querySelector('.week-days-grid');
+    const areaDetailView = document.getElementById('areaDetailView');
+    const areaDetailTitle = document.getElementById('areaDetailTitle');
+    const closeAreaDetailBtn = document.getElementById('closeAreaDetailBtn');
+    const weeklyViewTitle = document.getElementById('weeklyViewTitle');
+    const weeklySundayLabel = document.getElementById('weeklySundayLabel');
+    let isWeeklyViewVisible = false;
+    let currentAreaKey = null;
+    let lastAutoFilledWeeklyTask = '';
+    const lawTitle = document.getElementById('lawTitle');
+    const lawText = document.getElementById('lawText');
+    const statusBox = document.getElementById('statusBox');
+    const authCard = document.getElementById('authCard');
+    const appShell = document.getElementById('appShell');
+    const loginForm = document.getElementById('loginForm');
+    const signupBtn = document.getElementById('signupBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const supabaseUrl = window.CHANCENPLANER_CONFIG?.supabaseUrl;
+    const supabaseAnonKey = window.CHANCENPLANER_CONFIG?.supabaseAnonKey;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert('config.js fehlt oder ist unvollständig. Bitte config.example.js nach config.js kopieren und Supabase-Daten eintragen.');
+      throw new Error('Supabase config missing');
+    }
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    let currentSession = null;
+    let appInitialized = false;
+    const weeklyEntryFields = weeklyDayKeys.flatMap(day => [
+      `weekly_${day}_activity`, `weekly_${day}_goal`
+    ]);
+
+    function todayString() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+    function dayDiff(start, current) {
+      const a = new Date(start + 'T00:00:00');
+      const b = new Date(current + 'T00:00:00');
+      return Math.round((b - a) / 86400000);
+    }
+    function formatGermanDate(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const weekday = new Intl.DateTimeFormat('de-DE', { weekday: 'long' }).format(date);
+      const month = new Intl.DateTimeFormat('de-DE', { month: 'long' }).format(date);
+      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+      return `${cap(weekday)} ${d} ${cap(month)}`;
+    }
+    function isoWeek(date) {
+      const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const day = tmp.getUTCDay() || 7;
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - day);
+      const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+      return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+    }
+    function formatWeekLabel(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      return `KW ${isoWeek(date)}`;
+    }
+    function isoDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    function getStartOfWeek(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const day = date.getDay() || 7;
+      date.setDate(date.getDate() - day + 1);
+      return isoDate(date);
+    }
+    function formatWeekRange(dateStr) {
+      const weekStart = getStartOfWeek(dateStr);
+      const [y, m, d] = weekStart.split('-').map(Number);
+      const start = new Date(y, m - 1, d);
+      const end = new Date(y, m - 1, d);
+      end.setDate(end.getDate() + 6);
+      const f = date => `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.`;
+      return `${formatWeekLabel(weekStart)} · ${f(start)}–${f(end)}`;
+    }
+    function getSundayOfWeek(dateStr) {
+      const [y, m, d] = getStartOfWeek(dateStr).split('-').map(Number);
+      const sunday = new Date(y, m - 1, d);
+      sunday.setDate(sunday.getDate() + 6);
+      return sunday;
+    }
+    function formatSundayLabel(dateStr) {
+      const sunday = getSundayOfWeek(dateStr);
+      const day = sunday.getDate();
+      const month = new Intl.DateTimeFormat('de-DE', { month: 'long' }).format(sunday);
+      const year = String(sunday.getFullYear()).slice(-2);
+      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+      return `am ${day}. ${cap(month)} ${year}`;
+    }
+    function getWeekdayKey(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      return ['sonntag', 'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag'][date.getDay()];
+    }
+    function getCurrentWeeklyActivityForDate(dateStr) {
+      const weekdayKey = getWeekdayKey(dateStr);
+      return fields[`weekly_${weekdayKey}_activity`]?.value.trim() || '';
+    }
+    function syncTaskFromWeeklyPlan(dateStr) {
+      if (!dateStr) return false;
+      const weeklyTask = getCurrentWeeklyActivityForDate(dateStr);
+      if (!weeklyTask) {
+        lastAutoFilledWeeklyTask = '';
+        return false;
+      }
+      const currentTask = fields.task.value.trim();
+      if (currentTask && currentTask !== lastAutoFilledWeeklyTask) return false;
+      if (currentTask === weeklyTask) {
+        lastAutoFilledWeeklyTask = weeklyTask;
+        return false;
+      }
+      fields.task.value = weeklyTask;
+      lastAutoFilledWeeklyTask = weeklyTask;
+      return true;
+    }
+    function getLawForDate(dateStr) {
+      const base = '2026-01-01';
+      const diff = Math.max(0, dayDiff(base, dateStr));
+      const lawIndex = diff % laws.length;
+      return { cycleDay: diff + 1, lawIndex: lawIndex + 1, ...laws[lawIndex] };
+    }
+    function renderLaw(dateStr) {
+      const law = getLawForDate(dateStr);
+      weekLabel.textContent = formatWeekLabel(dateStr);
+      lawTitle.textContent = law.title;
+      lawText.textContent = law.text;
+      fields.displayDate.value = formatGermanDate(dateStr);
+      return law;
+    }
+    function clearDailyFormOnly() {
+      for (const key of dailyFields) {
+        if (key === 'date' || key === 'displayDate') continue;
+        const el = fields[key];
+        if (!el) continue;
+        el.value = '';
+      }
+      lastAutoFilledWeeklyTask = '';
+    }
+    function clearWeeklyFormOnly() {
+      weeklyEntryFields.forEach(key => {
+        const el = fields[key];
+        if (el) el.value = '';
+      });
+    }
+    function showStatus(message, isError = false) {
+      statusBox.style.display = 'block';
+      statusBox.textContent = message;
+      statusBox.style.background = isError ? 'rgba(239, 68, 68, 0.10)' : 'rgba(34, 197, 94, 0.10)';
+      statusBox.style.borderColor = isError ? 'rgba(239, 68, 68, 0.35)' : 'rgba(34, 197, 94, 0.35)';
+      statusBox.style.color = isError ? '#fecaca' : '#dcfce7';
+      clearTimeout(showStatus._timer);
+      showStatus._timer = setTimeout(() => { statusBox.style.display = 'none'; }, 1800);
+    }
+    function getRequestBody(options = {}) {
+      if (!options.body) return {};
+      if (typeof options.body === 'string') return JSON.parse(options.body || '{}');
+      return options.body;
+    }
+    async function requireSession() {
+      if (currentSession?.user) return currentSession;
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error) throw error;
+      if (!data.session) throw new Error('Bitte zuerst einloggen');
+      currentSession = data.session;
+      return currentSession;
+    }
+    async function loadJsonRecord(table, column, value) {
+      await requireSession();
+      const { data, error } = await supabaseClient
+        .from(table)
+        .select('data')
+        .eq(column, value)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('not found');
+      return data.data || {};
+    }
+    async function upsertJsonRecord(table, column, value, payload, idValue = null) {
+      await requireSession();
+      const basePayload = { data: payload };
+      if (idValue !== null) basePayload.id = idValue;
+      basePayload[column] = value;
+      const { data: existing, error: existingError } = await supabaseClient
+        .from(table)
+        .select(column)
+        .eq(column, value)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existing) {
+        const { error } = await supabaseClient.from(table).update({ data: payload }).eq(column, value);
+        if (error) throw error;
+        return { ok: true };
+      }
+      const { error } = await supabaseClient.from(table).insert(basePayload);
+      if (error) throw error;
+      return { ok: true };
+    }
+    async function deleteJsonRecord(table, column, value) {
+      await requireSession();
+      const { error } = await supabaseClient.from(table).delete().eq(column, value);
+      if (error) throw error;
+      return { ok: true };
+    }
+    async function api(path, options = {}) {
+      const method = (options.method || 'GET').toUpperCase();
+      if (path === '/api/strategy') {
+        if (method === 'GET') {
+          try {
+            return await loadJsonRecord('strategy_profiles_v4', 'id', 'default');
+          } catch (error) {
+            if (String(error.message).includes('not found')) return {};
+            throw error;
+          }
+        }
+        if (method === 'PUT') return upsertJsonRecord('strategy_profiles_v4', 'id', 'default', getRequestBody(options), 'default');
+      }
+      if (path.startsWith('/api/entries/')) {
+        const dateStr = decodeURIComponent(path.split('/api/entries/')[1] || '');
+        if (method === 'GET') return loadJsonRecord('daily_entries_v4', 'entry_date', dateStr);
+        if (method === 'PUT') return upsertJsonRecord('daily_entries_v4', 'entry_date', dateStr, getRequestBody(options));
+        if (method === 'DELETE') return deleteJsonRecord('daily_entries_v4', 'entry_date', dateStr);
+      }
+      if (path.startsWith('/api/weekly/')) {
+        const weekStart = decodeURIComponent(path.split('/api/weekly/')[1] || '');
+        if (method === 'GET') return loadJsonRecord('weekly_entries_v4', 'week_start', weekStart);
+        if (method === 'PUT') return upsertJsonRecord('weekly_entries_v4', 'week_start', weekStart, getRequestBody(options));
+        if (method === 'DELETE') return deleteJsonRecord('weekly_entries_v4', 'week_start', weekStart);
+      }
+      throw new Error(`Unbekannter API-Pfad: ${path}`);
+    }
+    function strategyPayload() {
+      const payload = {
+        motto_langfristig: fields.mottoLong.value.trim(),
+        fokus_woche: fields.focusWeek.value.trim(),
+        identitaet: fields.identityBlock.value.trim(),
+        lebenssinn_mission: fields.missionBlock.value.trim(),
+        werte_rollen_glaubenssaetze: fields.valuesBlock.value.trim(),
+        langfristige_ziele_10_jahre: fields.goalLong10.value.trim(),
+        mittelfristige_ziele_2_5_jahre: fields.goalMid25.value.trim(),
+        kurzfristige_ziele_1_jahr: fields.goalShort1.value.trim(),
+        prioritaeten_dieser_woche: fields.priorityWeek.value.trim(),
+        wochenblock_gesundheit: fields.weeklyHealth.value.trim(),
+        wochenblock_beziehungen: fields.weeklyRelationships.value.trim(),
+        wochenblock_finanzen: fields.weeklyFinances.value.trim(),
+        wochenblock_emotionen: fields.weeklyEmotions.value.trim(),
+        wochenblock_lebenssinn_job_spirit: fields.weeklyPurpose.value.trim(),
+        reflexion_spass: fields.weeklyJoy.value.trim(),
+        reflexion_gelernt: fields.weeklyLearning.value.trim(),
+        reflexion_erfolgsjournal: fields.weeklySuccessJournal.value.trim(),
+        reflexion_erfolg_wenn_sicher: fields.weeklySuccessMove.value.trim()
+      };
+      areaConfigs.forEach(area => areaSectionConfigs.forEach(section => {
+        payload[`bereich_${area.key}_${section.key}`] = fields[`area_${area.key}_${section.key}`].value.trim();
+      }));
+      return payload;
+    }
+    async function loadStrategy() {
+      const entry = await api('/api/strategy');
+      fields.mottoLong.value = entry.motto_langfristig || '';
+      fields.focusWeek.value = entry.fokus_woche || '';
+      fields.identityBlock.value = entry.identitaet || '';
+      fields.missionBlock.value = entry.lebenssinn_mission || '';
+      fields.valuesBlock.value = entry.werte_rollen_glaubenssaetze || '';
+      fields.goalLong10.value = entry.langfristige_ziele_10_jahre || '';
+      fields.goalMid25.value = entry.mittelfristige_ziele_2_5_jahre || '';
+      fields.goalShort1.value = entry.kurzfristige_ziele_1_jahr || '';
+      fields.priorityWeek.value = entry.prioritaeten_dieser_woche || '';
+      fields.weeklyHealth.value = entry.wochenblock_gesundheit || '';
+      fields.weeklyRelationships.value = entry.wochenblock_beziehungen || '';
+      fields.weeklyFinances.value = entry.wochenblock_finanzen || '';
+      fields.weeklyEmotions.value = entry.wochenblock_emotionen || '';
+      fields.weeklyPurpose.value = entry.wochenblock_lebenssinn_job_spirit || '';
+      fields.weeklyJoy.value = entry.reflexion_spass || '';
+      fields.weeklyLearning.value = entry.reflexion_gelernt || '';
+      fields.weeklySuccessJournal.value = entry.reflexion_erfolgsjournal || '';
+      fields.weeklySuccessMove.value = entry.reflexion_erfolg_wenn_sicher || '';
+      areaConfigs.forEach(area => areaSectionConfigs.forEach(section => {
+        fields[`area_${area.key}_${section.key}`].value = entry[`bereich_${area.key}_${section.key}`] || '';
+      }));
+    }
+    async function saveStrategy() {
+      await api('/api/strategy', { method: 'PUT', body: JSON.stringify(strategyPayload()) });
+      showStatus('Strategieblock gespeichert');
+    }
+    async function loadEntry(dateStr) {
+      clearDailyFormOnly();
+      renderLaw(dateStr);
+      try {
+        const entry = await api(`/api/entries/${dateStr}`);
+        fields.chance.value = entry.chance_des_tages || '';
+        fields.gratitude.value = entry.dankbarkeit || '';
+        fields.task.value = entry.wichtigste_aufgabe_602020 || '';
+        lastAutoFilledWeeklyTask = '';
+        if (!fields.task.value.trim()) syncTaskFromWeeklyPlan(dateStr);
+        fields.lawAction.value = entry.gesetz_heute_umsetzung || '';
+        fields.success1.value = entry.erfolg_1 || '';
+        fields.success2.value = entry.erfolg_2 || '';
+        fields.success3.value = entry.erfolg_3 || '';
+        fields.success4.value = entry.erfolg_4 || '';
+        fields.success5.value = entry.erfolg_5 || '';
+        fields.taskStatus.value = entry.reflexion_aufgabe_status || '';
+        fields.taskWhy.value = entry.reflexion_aufgabe_warum || '';
+        fields.lawStatus.value = entry.reflexion_gesetz_status || '';
+        fields.lawWhy.value = entry.reflexion_gesetz_warum || '';
+      } catch (error) {
+        if (!String(error.message).includes('not found')) throw error;
+        if (!fields.task.value.trim()) syncTaskFromWeeklyPlan(dateStr);
+      }
+    }
+    function dailyPayload(dateStr) {
+      const law = renderLaw(dateStr);
+      return {
+        datum: dateStr,
+        tag_im_zyklus: law.cycleDay,
+        gesetz_index: law.lawIndex,
+        gesetz_titel: law.title,
+        gesetz_text: law.text,
+        chance_des_tages: fields.chance.value.trim(),
+        dankbarkeit: fields.gratitude.value.trim(),
+        wichtigste_aufgabe_602020: fields.task.value.trim(),
+        gesetz_heute_umsetzung: fields.lawAction.value.trim(),
+        erfolg_1: fields.success1.value.trim(),
+        erfolg_2: fields.success2.value.trim(),
+        erfolg_3: fields.success3.value.trim(),
+        erfolg_4: fields.success4.value.trim(),
+        erfolg_5: fields.success5.value.trim(),
+        reflexion_aufgabe_status: fields.taskStatus.value,
+        reflexion_aufgabe_warum: fields.taskWhy.value.trim(),
+        reflexion_gesetz_status: fields.lawStatus.value,
+        reflexion_gesetz_warum: fields.lawWhy.value.trim()
+      };
+    }
+    function weeklyPayload(dateStr) {
+      const weekStart = getStartOfWeek(dateStr);
+      const tage = {};
+      weeklyDayKeys.forEach(day => {
+        tage[day] = {
+          aktivitaet: fields[`weekly_${day}_activity`].value.trim(),
+          ziel: fields[`weekly_${day}_goal`].value.trim(),
+        };
+      });
+      return {
+        week_start: weekStart,
+        gesundheit: fields.weeklyHealth.value.trim(),
+        beziehungen: fields.weeklyRelationships.value.trim(),
+        finanzen: fields.weeklyFinances.value.trim(),
+        emotionen: fields.weeklyEmotions.value.trim(),
+        lebenssinn_job_spirit: fields.weeklyPurpose.value.trim(),
+        tage,
+      };
+    }
+    function applyWeeklyEntry(entry) {
+      weeklyDayKeys.forEach(day => {
+        const dayEntry = entry.tage?.[day] || {};
+        fields[`weekly_${day}_activity`].value = dayEntry.aktivitaet || dayEntry.block1 || '';
+        fields[`weekly_${day}_goal`].value = dayEntry.ziel || '';
+      });
+    }
+    async function loadWeeklyEntry(dateStr) {
+      clearWeeklyFormOnly();
+      weeklyViewTitle.textContent = formatWeekRange(dateStr);
+      weeklySundayLabel.textContent = formatSundayLabel(dateStr);
+      try {
+        const entry = await api(`/api/weekly/${getStartOfWeek(dateStr)}`);
+        applyWeeklyEntry(entry);
+      } catch (error) {
+        if (!String(error.message).includes('not found')) throw error;
+      }
+      syncTaskFromWeeklyPlan(dateStr);
+    }
+    async function saveEntry() {
+      const dateStr = fields.date.value;
+      if (!dateStr) return;
+      await api(`/api/entries/${dateStr}`, { method: 'PUT', body: JSON.stringify(dailyPayload(dateStr)) });
+      showStatus(`Automatisch gespeichert: ${formatGermanDate(dateStr)}`);
+    }
+    async function saveWeeklyEntry() {
+      const dateStr = fields.date.value || todayString();
+      await api(`/api/weekly/${getStartOfWeek(dateStr)}`, { method: 'PUT', body: JSON.stringify(weeklyPayload(dateStr)) });
+      showStatus(`Woche gespeichert: ${formatWeekRange(dateStr)}`);
+    }
+    async function clearCurrentDay() {
+      const dateStr = fields.date.value;
+      if (!dateStr) return;
+      await api(`/api/entries/${dateStr}`, { method: 'DELETE' });
+      clearDailyFormOnly();
+      renderLaw(dateStr);
+      showStatus(`Eintrag gelöscht: ${formatGermanDate(dateStr)}`);
+    }
+    function setAreaDetailVisible(areaKey) {
+      currentAreaKey = areaKey || null;
+      const isOpen = Boolean(currentAreaKey);
+      weeklyOverviewCard.style.display = isOpen ? 'none' : 'block';
+      areaDetailView.style.display = isOpen ? 'block' : 'none';
+      if (weekDaysGrid) weekDaysGrid.style.display = isOpen ? 'none' : 'grid';
+      if (!isOpen) return;
+      const area = areaConfigs.find(item => item.key === currentAreaKey);
+      areaDetailTitle.textContent = area ? area.title : 'Bereich';
+      areaSectionConfigs.forEach(section => {
+        const sourceField = fields[`area_${currentAreaKey}_${section.key}`];
+        const targetField = document.getElementById(`area-detail-${section.key}`);
+        if (sourceField && targetField && targetField !== sourceField) targetField.value = sourceField.value;
+      });
+    }
+    function setView(showWeekly) {
+      isWeeklyViewVisible = showWeekly;
+      dailyView.style.display = showWeekly ? 'none' : 'block';
+      weeklyView.style.display = showWeekly ? 'block' : 'none';
+      if (!showWeekly) setAreaDetailVisible(null);
+      weekToggleBtn.style.background = showWeekly ? 'var(--accent)' : '#334155';
+      weekToggleBtn.style.color = showWeekly ? '#052e16' : 'var(--text)';
+    }
+    let strategyAutosaveTimer;
+    let dailyAutosaveTimer;
+    let weeklyAutosaveTimer;
+    function scheduleStrategyAutosave() {
+      clearTimeout(strategyAutosaveTimer);
+      strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+    }
+    function scheduleDailyAutosave() {
+      clearTimeout(dailyAutosaveTimer);
+      dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+    }
+    function scheduleWeeklyAutosave() {
+      clearTimeout(weeklyAutosaveTimer);
+      weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+    }
+    fields.date.addEventListener('change', async () => {
+      try {
+        await loadWeeklyEntry(fields.date.value);
+        await loadEntry(fields.date.value);
+      } catch (error) {
+        showStatus(`Fehler: ${error.message}`, true);
+      }
+    });
+    weekToggleBtn.addEventListener('click', () => {
+      const nextState = !isWeeklyViewVisible;
+      setView(nextState);
+      if (nextState) loadWeeklyEntry(fields.date.value || todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true));
+    });
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      clearCurrentDay().catch(error => showStatus(`Fehler: ${error.message}`, true));
+    });
+    areaConfigs.forEach(area => {
+      const openBtn = document.getElementById(`open-area-${area.key}`);
+      if (openBtn) openBtn.addEventListener('click', () => setAreaDetailVisible(area.key));
+    });
+    closeAreaDetailBtn.addEventListener('click', () => setAreaDetailVisible(null));
+    areaSectionConfigs.forEach(section => {
+      const detailField = document.getElementById(`area-detail-${section.key}`);
+      if (!detailField) return;
+      const syncCurrentArea = () => {
+        if (!currentAreaKey) return;
+        const sourceField = fields[`area_${currentAreaKey}_${section.key}`];
+        if (!sourceField) return;
+        sourceField.value = detailField.value;
+        scheduleStrategyAutosave();
+      };
+      detailField.addEventListener('input', syncCurrentArea);
+      detailField.addEventListener('change', syncCurrentArea);
+    });
+    Object.entries(fields).forEach(([key, el]) => {
+      if (!el || key === 'date' || key === 'displayDate') return;
+      let handler = scheduleDailyAutosave;
+      if (strategyFields.includes(key)) handler = scheduleStrategyAutosave;
+      else if (weeklyEntryFields.includes(key)) handler = scheduleWeeklyAutosave;
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+      if (weeklyEntryFields.includes(key)) {
+        el.addEventListener('input', () => syncTaskFromWeeklyPlan(fields.date.value));
+        el.addEventListener('change', () => syncTaskFromWeeklyPlan(fields.date.value));
+      }
+    });
+    async function initAuthenticatedApp() {
+      if (appInitialized) return;
+      fields.date.value = todayString();
+      setView(false);
+      await loadStrategy();
+      await loadEntry(fields.date.value);
+      await loadWeeklyEntry(fields.date.value);
+      appInitialized = true;
+    }
+    async function applySession(session) {
+      currentSession = session || null;
+      const isLoggedIn = Boolean(currentSession?.user);
+      authCard.classList.toggle('hidden', isLoggedIn);
+      appShell.classList.toggle('hidden', !isLoggedIn);
+      if (!isLoggedIn) {
+        appInitialized = false;
+        return;
+      }
+      await initAuthenticatedApp();
+    }
+    async function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return showStatus(`Login fehlgeschlagen: ${error.message}`, true);
+      showStatus('Eingeloggt');
+    }
+    async function handleSignup() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) return showStatus(`Signup fehlgeschlagen: ${error.message}`, true);
+      showStatus('Account angelegt. Falls Supabase E-Mail-Bestätigung aktiviert ist, bestätige die Mail.');
+    }
+    async function handleLogout() {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) return showStatus(`Logout fehlgeschlagen: ${error.message}`, true);
+      showStatus('Ausgeloggt');
+    }
+    loginForm.addEventListener('submit', event => handleLogin(event));
+    signupBtn.addEventListener('click', () => handleSignup());
+    logoutBtn.addEventListener('click', () => handleLogout());
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      applySession(session).catch(error => showStatus(`Fehler: ${error.message}`, true));
+    });
+    supabaseClient.auth.getSession().then(({ data, error }) => {
+      if (error) throw error;
+      return applySession(data.session);
+    }).catch(error => showStatus(`Fehler: ${error.message}`, true));
+  </script>
+</body>
+</html>
