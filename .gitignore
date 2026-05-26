@@ -1,0 +1,25 @@
+# Betriebssystem / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Lokale Datenbanken / Laufzeitdaten
+*.db
+*.sqlite
+*.sqlite3
+
+# Lokale Fehlkopie, nicht versionieren
+/dev/tests/index.html
+
+# Secrets / lokale Umgebungen
+.env
+.env.*
+!.env.example
