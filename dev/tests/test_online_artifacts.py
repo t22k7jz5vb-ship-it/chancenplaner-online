@@ -181,6 +181,28 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertIn('.note-editor {', html)
         self.assertIn('font-style: italic;', html)
 
+    def test_motto_and_focus_use_note_editors_instead_of_plain_text_inputs(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('<label for="mottoLong">Motto: (langfr.)</label>', html)
+        self.assertIn('<div id="mottoLong" class="note-editor" contenteditable="true"></div>', html)
+        self.assertNotIn('<input id="mottoLong" type="text">', html)
+        self.assertIn('<label for="focusWeek">Fokus: (diese Woche)</label>', html)
+        self.assertIn('<div id="focusWeek" class="note-editor" contenteditable="true"></div>', html)
+        self.assertNotIn('<input id="focusWeek" type="text">', html)
+
+    def test_success_fields_use_note_editors_instead_of_plain_text_inputs(self):
+        html = INDEX.read_text(encoding='utf-8')
+        for field_id, label in [
+            ('success1', 'Erfolg 1'),
+            ('success2', 'Erfolg 2'),
+            ('success3', 'Erfolg 3'),
+            ('success4', 'Erfolg 4'),
+            ('success5', 'Erfolg 5'),
+        ]:
+            self.assertIn(f'<label for="{field_id}">{label}</label>', html)
+            self.assertIn(f'<div id="{field_id}" class="note-editor" contenteditable="true"></div>', html)
+            self.assertNotIn(f'<input id="{field_id}" type="text">', html)
+
     def test_autosave_waits_five_minutes_in_dev(self):
         html = INDEX.read_text(encoding='utf-8')
         self.assertIn('strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
