@@ -83,6 +83,7 @@ class OnlineArtifactsTests(unittest.TestCase):
             'data-year-section="year-section-lessons">Lehren',
             'data-year-section="year-section-successes">Erfolge',
             'data-year-section="year-section-life-successes">Lebenserfolge',
+            'data-year-section="year-section-helpful">Hilfreiches',
         ]
         positions = [html.index(button) for button in ordered_buttons]
         self.assertEqual(positions, sorted(positions))
@@ -93,6 +94,7 @@ class OnlineArtifactsTests(unittest.TestCase):
             'year-section-lessons',
             'year-section-successes',
             'year-section-life-successes',
+            'year-section-helpful',
         ]:
             self.assertIn(f'id="{section_id}"', html)
         self.assertNotIn('data-year-section="year-section-tips"', html)
@@ -134,6 +136,25 @@ class OnlineArtifactsTests(unittest.TestCase):
         ]:
             self.assertIn(f'id="{field_id}" class="year-full-page-textarea note-editor"', html)
 
+    def test_year_planning_has_helpful_reference_section(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('data-year-section="year-section-helpful">Hilfreiches', html)
+        self.assertIn('id="year-section-helpful"', html)
+        for title in ['Finanzen', 'Problemlösung', 'Angst', 'Beziehungen']:
+            self.assertIn(f'<h3>{title}</h3>', html)
+        for marker in [
+            'von Bodo Schäfer',
+            'Lege Deine Ziele fest.',
+            'Überprüfe Deine Ziele.',
+            'Was ist gut an diesem Problem?',
+            'Solltest Du Angst haben',
+            '24 goldene Regeln, um Menschen das zu geben, was sie brauchen',
+            'Sende dem anderen still Deine besten Wünsche, wenn Du an ihn denkst.'
+        ]:
+            self.assertIn(marker, html)
+        self.assertIn('class="helpful-section-grid"', html)
+        self.assertIn('helpful-reference-card', html)
+
     def test_note_blocks_are_auto_growing_editors_without_inner_scrollbar(self):
         html = INDEX.read_text(encoding='utf-8')
         self.assertIn('.note-editor {', html)
@@ -154,6 +175,44 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertNotIn('function initFormatToolbar', html)
         self.assertNotIn('document.execCommand(command, false, null)', html)
         self.assertNotIn('initFormatToolbar();', html)
+
+    def test_note_editors_are_italic_by_default(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('.note-editor {', html)
+        self.assertIn('font-style: italic;', html)
+
+    def test_autosave_waits_five_minutes_in_dev(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
+        self.assertIn('dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
+        self.assertIn('weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
+        self.assertNotIn(')), 300);', html)
+
+    def test_daily_view_has_day_navigation_buttons(self):
+        html = INDEX.read_text(encoding='utf-8')
+        for snippet in [
+            'id="displayDate"',
+            'id="weekLabel"',
+            'id="todayBtn"',
+            '>Heute</button>',
+            'id="prevDayBtn"',
+            '>←</button>',
+            'id="nextDayBtn"',
+            '>→</button>',
+            'id="clearBtn"',
+            '>Diesen Tag leeren</button>',
+            'function shiftCurrentDate(days)',
+            'function setCurrentDate(dateStr)',
+            "prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));",
+            "todayBtn.addEventListener('click', () => setCurrentDate(todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true)));",
+            "nextDayBtn.addEventListener('click', () => shiftCurrentDate(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));"
+        ]:
+            self.assertIn(snippet, html)
+        self.assertLess(html.index('id="displayDate"'), html.index('id="weekLabel"'))
+        self.assertLess(html.index('id="weekLabel"'), html.index('id="todayBtn"'))
+        self.assertLess(html.index('id="todayBtn"'), html.index('id="prevDayBtn"'))
+        self.assertLess(html.index('id="prevDayBtn"'), html.index('id="nextDayBtn"'))
+        self.assertLess(html.index('id="nextDayBtn"'), html.index('id="clearBtn"'))
 
     def test_main_view_contains_subtle_goal_buttons_and_separate_goal_pages(self):
         html = INDEX.read_text(encoding='utf-8')

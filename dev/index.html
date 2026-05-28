@@ -23,7 +23,7 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     label { display: block; font-weight: 600; margin-bottom: 8px; }
     input[type="text"], input[type="password"], select, .note-editor { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font: inherit; }
-    .note-editor { min-height: 110px; resize: none; overflow-y: visible; white-space: pre-wrap; word-break: break-word; outline: none; }
+    .note-editor { min-height: 110px; resize: none; overflow-y: visible; white-space: pre-wrap; word-break: break-word; outline: none; font-style: italic; }
     .note-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18); }
     .small .note-editor { min-height: 80px; }
     .meta { color: var(--muted); font-size: 0.95rem; }
@@ -67,6 +67,11 @@
     .year-note { color: var(--muted); margin-top: -4px; }
     .year-block .note-editor { min-height: 120px; }
     .year-full-page-textarea { min-height: 70vh; }
+    .helpful-section-grid { display: grid; gap: 16px; }
+    .helpful-reference-card { display: grid; gap: 12px; }
+    .helpful-reference-card p, .helpful-reference-card li { color: var(--text); }
+    .helpful-reference-card ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+    .helpful-reference-card .meta { margin-top: -4px; }
     .week-days-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     .week-day-card { display: grid; gap: 12px; }
     .week-day-card h3 { margin-bottom: 0; color: var(--accent); }
@@ -199,6 +204,9 @@
             <div class="date-inline">
               <input id="displayDate" class="date-display" type="text" readonly>
               <div id="weekLabel" class="week-chip">KW</div>
+              <button class="ghost" id="todayBtn" type="button">Heute</button>
+              <button class="ghost" id="prevDayBtn" type="button">←</button>
+              <button class="ghost" id="nextDayBtn" type="button">→</button>
             </div>
             <input id="entryDate" class="hidden-date" type="date">
           </div>
@@ -366,6 +374,7 @@
           <button type="button" class="year-section-btn" data-year-section="year-section-lessons">Lehren</button>
           <button type="button" class="year-section-btn" data-year-section="year-section-successes">Erfolge</button>
           <button type="button" class="year-section-btn" data-year-section="year-section-life-successes">Lebenserfolge</button>
+          <button type="button" class="year-section-btn" data-year-section="year-section-helpful">Hilfreiches</button>
         </div>
       </div>
 
@@ -429,6 +438,105 @@
         <div class="small year-block">
           <label for="year-life-successes">Die größten Erfolge meines Lebens</label>
           <div id="year-life-successes" class="year-full-page-textarea note-editor" contenteditable="true"></div>
+        </div>
+      </div>
+
+      <div class="card year-card year-section year-panel" id="year-section-helpful">
+        <h2>Hilfreiches</h2>
+        <div class="meta">Feste Referenztexte für Finanzen, Problemlösung, Angst und Beziehungen.</div>
+        <div class="helpful-section-grid">
+          <div class="card helpful-reference-card">
+            <h3>Finanzen</h3>
+            <div class="meta">von Bodo Schäfer</div>
+            <p>Lege Deine Ziele fest. Bestimme, wie Dein Lebensstandard aussehen soll und wie viel Geld Du dafür benötigst.</p>
+            <ol>
+              <li>Lege Deine Ziele fest.</li>
+              <li>Überprüfe Deine Glaubenssätze in Bezug auf Geld.</li>
+              <li>Trainiere den Umgang mit Geld.</li>
+              <li>Erhöhe Dein Einkommen und führe ein ErfolgsJournal.</li>
+              <li>Vermeide jede Art von Konsumschulden.</li>
+              <li>Spare mindestens 10 Prozent Deines Nettoeinkommens.</li>
+              <li>Verteile Dein Geld auf die sechs Risikoklassen.</li>
+              <li>Investiere planvoll und erstelle Dir einen Plan.</li>
+              <li>Spende regelmäßig einen bestimmten Betrag.</li>
+            </ol>
+            <p>Einmal pro Jahr solltest Du Dir einen halben bis zwei ganze Tage Zeit nehmen, um Dein Portfolio zu aktualisieren und einige wichtige Aufgaben zu erledigen.</p>
+            <ol>
+              <li>Überprüfe Deine Ziele.</li>
+              <li>Rechne aus, wie sich Dein Vermögen während des letzten Jahres verändert hat.</li>
+              <li>Überprüfe Deine Strategien, um Dein Einkommen zu steigern.</li>
+              <li>Erstelle erneut einen Budgetplan.</li>
+              <li>Überprüfe und verändere gegebenenfalls Dein Kontenmodell.</li>
+              <li>Überprüfe Dein Portfolio.</li>
+              <li>Besprich die Ergebnisse mit Deinem Anlageberater.</li>
+              <li>Überprüfe Dein Wissen und Deine Zeitinvestition.</li>
+              <li>Genießt Du Dein Geld? Bist Du dankbar?</li>
+              <li>Plane nun, wie Du Deine Finanzen im kommenden Jahr verbessern willst.</li>
+            </ol>
+          </div>
+
+          <div class="card helpful-reference-card">
+            <h3>Problemlösung</h3>
+            <div class="meta">von Bodo Schäfer</div>
+            <p>Sobald ein Problem auftaucht, schaue am besten gleich auf das, was Du jetzt tun kannst.</p>
+            <ol>
+              <li>Was ist gut an diesem Problem?</li>
+              <li>Was ist in meinem Leben noch nicht perfekt, so dass dieses Problem entstehen konnte?</li>
+              <li>Was bin ich bereit zu tun, um zukünftig nicht mehr in diese Lage zu kommen?</li>
+              <li>Welche möglichen Lösungen gibt es?</li>
+              <li>Welche Lösung ist die beste?</li>
+              <li>Wie kann ich bei der Problembewältigung Spaß haben?</li>
+            </ol>
+          </div>
+
+          <div class="card helpful-reference-card">
+            <h3>Angst</h3>
+            <div class="meta">von Bodo Schäfer</div>
+            <p>Solltest Du Angst haben, so lies diese zehn Punkte:</p>
+            <ol>
+              <li>Frage Dich: Was wurde aus den Ängsten meiner Vergangenheit?</li>
+              <li>Schreibe fünf Dinge auf, für die Du dankbar bist.</li>
+              <li>Warum sollten wir also heute schon leiden?</li>
+              <li>Mache Dir bewusst, dass Du diesen Tag gut bewältigen kannst.</li>
+              <li>Rede so schnell wie möglich mit einem Gewinner.</li>
+              <li>Handle.</li>
+              <li>Frage Dich niemals, ob Du die Aufgabe schaffen kannst. Frage Dich nur: Wie schaffe ich es?</li>
+              <li>Züchte positive Vorstellungen.</li>
+              <li>Höre inspirierende Musik.</li>
+              <li>Schaue in Dein Erfolgs-Journal.</li>
+            </ol>
+          </div>
+
+          <div class="card helpful-reference-card">
+            <h3>Beziehungen</h3>
+            <div class="meta">24 goldene Regeln, um Menschen das zu geben, was sie brauchen</div>
+            <ol>
+              <li>Ermutige den anderen, wann immer Du kannst.</li>
+              <li>Gib dem anderen immer die Möglichkeit, das Gesicht zu wahren.</li>
+              <li>Sprich in Abwesenheit eines anderen Menschen nur positiv über ihn.</li>
+              <li>Beobachte den anderen aufmerksam.</li>
+              <li>Appelliere immer an die edle Gesinnung und die edlen Motive des anderen.</li>
+              <li>Kritisiere möglichst selten und am besten nur indirekt.</li>
+              <li>Gib dem anderen die Möglichkeit, sich groß zu fühlen.</li>
+              <li>Entschuldige Dich, wenn Du Fehler gemacht hast.</li>
+              <li>Mache Vorschläge, statt Befehle zu geben.</li>
+              <li>Reagiere mit Verständnis auf die Verärgerung von anderen.</li>
+              <li>Sprich selbst so wenig wie möglich.</li>
+              <li>Lasse den anderen glauben, die Idee stamme von ihm.</li>
+              <li>Unterbrich den anderen nicht.</li>
+              <li>Versuche, die Dinge vom Standpunkt der anderen aus zu sehen.</li>
+              <li>Bemühe Dich niemals, Recht zu haben.</li>
+              <li>Schenke häufig etwas – auch ohne jeden Anlass.</li>
+              <li>Bei Widerspruch: Beherrsche Dich.</li>
+              <li>Interessiere Dich aufrichtig für den anderen.</li>
+              <li>Lächle.</li>
+              <li>Sprich den anderen immer mit seinem vollen Namen an.</li>
+              <li>Lerne, die Dinge vom Standpunkt des anderen aus zu sehen.</li>
+              <li>Sorge dafür, dass der andere ein besseres Gefühl hat.</li>
+              <li>Vergib schnell.</li>
+              <li>Sende dem anderen still Deine besten Wünsche, wenn Du an ihn denkst.</li>
+            </ol>
+          </div>
         </div>
       </div>
     </div>
@@ -878,6 +986,10 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       const d = String(date.getDate()).padStart(2, '0');
       return `${y}-${m}-${d}`;
     }
+    function parseIsoDate(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
     function getStartOfWeek(dateStr) {
       const [y, m, d] = dateStr.split('-').map(Number);
       const date = new Date(y, m - 1, d);
@@ -1219,6 +1331,16 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       }
       syncTaskFromWeeklyPlan(dateStr);
     }
+    async function setCurrentDate(dateStr) {
+      fields.date.value = dateStr;
+      await loadWeeklyEntry(dateStr);
+      await loadEntry(dateStr);
+    }
+    async function shiftCurrentDate(days) {
+      const currentDate = parseIsoDate(fields.date.value || todayString());
+      currentDate.setDate(currentDate.getDate() + days);
+      await setCurrentDate(isoDate(currentDate));
+    }
     async function saveEntry() {
       const dateStr = fields.date.value;
       if (!dateStr) return;
@@ -1308,15 +1430,15 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     let weeklyAutosaveTimer;
     function scheduleStrategyAutosave() {
       clearTimeout(strategyAutosaveTimer);
-      strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+      strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
     }
     function scheduleDailyAutosave() {
       clearTimeout(dailyAutosaveTimer);
-      dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+      dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
     }
     function scheduleWeeklyAutosave() {
       clearTimeout(weeklyAutosaveTimer);
-      weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300);
+      weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
     }
     initRichTextEditors();
     openTenYearGoalsBtn.addEventListener('click', () => openGoalDetail(tenYearGoalsDetail));
@@ -1327,8 +1449,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     closeShortTermGoalsBtn.addEventListener('click', () => closeGoalDetail());
     fields.date.addEventListener('change', async () => {
       try {
-        await loadWeeklyEntry(fields.date.value);
-        await loadEntry(fields.date.value);
+        await setCurrentDate(fields.date.value);
       } catch (error) {
         showStatus(`Fehler: ${error.message}`, true);
       }
@@ -1344,6 +1465,9 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     document.querySelectorAll('.year-section-btn').forEach(btn => {
       btn.addEventListener('click', () => setYearPlanningSection(btn.dataset.yearSection));
     });
+    prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
+    todayBtn.addEventListener('click', () => setCurrentDate(todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true)));
+    nextDayBtn.addEventListener('click', () => shiftCurrentDate(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     document.getElementById('clearBtn').addEventListener('click', () => {
       clearCurrentDay().catch(error => showStatus(`Fehler: ${error.message}`, true));
     });
@@ -1384,8 +1508,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       fields.date.value = todayString();
       setView(false);
       await loadStrategy();
-      await loadEntry(fields.date.value);
-      await loadWeeklyEntry(fields.date.value);
+      await setCurrentDate(fields.date.value);
       appInitialized = true;
     }
     async function applySession(session) {
