@@ -367,6 +367,32 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertIn('try {\n        await flushPendingSaves();\n      } catch (error) {\n        return showStatus(`Speichern vor Logout fehlgeschlagen: ${error.message}`, true);\n      }', html)
         self.assertLess(html.index('return showStatus(`Speichern vor Logout fehlgeschlagen: ${error.message}`, true);'), html.index("const { error } = await supabaseClient.auth.signOut();"))
 
+    def test_local_draft_backup_is_persisted_and_cleared_around_remote_saves(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn("const DRAFT_STORAGE_PREFIX = 'chancenplaner-draft-v1';", html)
+        self.assertIn("function readDraft(section, scope = 'default') {", html)
+        self.assertIn("function writeDraft(section, scope, payload) {", html)
+        self.assertIn("function clearDraft(section, scope = 'default') {", html)
+        self.assertIn("function persistVisibleDrafts() {", html)
+        self.assertIn("persistStrategyDraft();", html)
+        self.assertIn("persistDailyDraft(dateStr);", html)
+        self.assertIn("persistWeeklyDraft(dateStr);", html)
+        self.assertIn("clearDraft('strategy', 'default');", html)
+        self.assertIn("clearDraft('daily', dateStr);", html)
+        self.assertIn("clearDraft('weekly', getStartOfWeek(dateStr));", html)
+        self.assertIn("const persistedDraft = readDraft('strategy', 'default');", html)
+        self.assertIn("const persistedDraft = readDraft('daily', dateStr);", html)
+        self.assertIn("const persistedDraft = readDraft('weekly', weekStart);", html)
+
+    def test_mobile_lifecycle_events_persist_local_drafts_and_attempt_flush(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn("window.addEventListener('beforeunload', () => {", html)
+        self.assertIn("window.addEventListener('pagehide', () => {", html)
+        self.assertIn("document.addEventListener('visibilitychange', () => {", html)
+        self.assertIn("if (document.visibilityState !== 'hidden') return;", html)
+        self.assertIn("persistVisibleDrafts();", html)
+        self.assertIn("flushPendingSaves().catch(() => {});", html)
+
     def test_daily_view_has_day_navigation_buttons_without_clear_button(self):
         html = INDEX.read_text(encoding='utf-8')
         for snippet in [

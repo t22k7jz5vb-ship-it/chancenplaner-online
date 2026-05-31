@@ -1150,9 +1150,54 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       if (parts.length <= 1) return { purpose: normalized.trim(), mission: '' };
       return { purpose: parts[0], mission: parts.slice(1).join('\n\n') };
     }
+    const DRAFT_STORAGE_PREFIX = 'chancenplaner-draft-v1';
+    function getDraftKey(section, scope = 'default') {
+      const userId = currentSession?.user?.id || 'anonymous';
+      return `${DRAFT_STORAGE_PREFIX}:${userId}:${section}:${scope}`;
+    }
+    function readDraft(section, scope = 'default') {
+      try {
+        const raw = localStorage.getItem(getDraftKey(section, scope));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? (parsed.data || null) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+    function writeDraft(section, scope, payload) {
+      try {
+        localStorage.setItem(getDraftKey(section, scope), JSON.stringify({ savedAt: new Date().toISOString(), data: payload }));
+      } catch (error) {}
+    }
+    function clearDraft(section, scope = 'default') {
+      try {
+        localStorage.removeItem(getDraftKey(section, scope));
+      } catch (error) {}
+    }
+    function persistStrategyDraft() {
+      writeDraft('strategy', 'default', strategyPayload());
+    }
+    function persistDailyDraft(dateStr = fields.date.value) {
+      if (!dateStr) return;
+      writeDraft('daily', dateStr, dailyPayload(dateStr));
+    }
+    function persistWeeklyDraft(dateStr = fields.date.value || todayString()) {
+      if (!dateStr) return;
+      writeDraft('weekly', getStartOfWeek(dateStr), weeklyPayload(dateStr));
+    }
+    function persistVisibleDrafts() {
+      if (!appInitialized) return;
+      const dateStr = fields.date.value || todayString();
+      persistStrategyDraft();
+      persistDailyDraft(dateStr);
+      persistWeeklyDraft(dateStr);
+    }
     async function loadStrategy(dateStr = getCurrentStrategyWeekStart()) {
-      const entry = await api('/api/strategy');
-      strategyDefaults = entry;
+      let entry = await api('/api/strategy');
+      const persistedDraft = readDraft('strategy', 'default');
+      entry = persistedDraft ? { ...entry, ...persistedDraft } : entry;
+      strategyDefaults = { ...entry };
       loadedStrategyEntry = { ...entry };
       fields.goalLong10.value = entry.langfristige_ziele_10_jahre || '';
       fields.goal10Date.value = entry.ziele_10_datum || '';
@@ -1194,7 +1239,10 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       await loadWeeklyEntry(dateStr);
     }
     async function saveStrategy(options = {}) {
-      await api('/api/strategy', { method: 'PUT', body: JSON.stringify(strategyPayload()) });
+      const payload = strategyPayload();
+      await api('/api/strategy', { method: 'PUT', body: JSON.stringify(payload) });
+      loadedStrategyEntry = { ...payload };
+      clearDraft('strategy', 'default');
       if (!options.silent) showStatus('Strategieblock gespeichert');
     }
     async function loadEntry(dateStr) {
@@ -1202,7 +1250,9 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       renderLaw(dateStr);
       loadedDailyEntry = {};
       try {
-        const entry = await api(`/api/entries/${dateStr}`);
+        let entry = await api(`/api/entries/${dateStr}`);
+        const persistedDraft = readDraft('daily', dateStr);
+        entry = persistedDraft ? { ...entry, ...persistedDraft } : entry;
         loadedDailyEntry = { ...entry };
         fields.chance.value = entry.chance_des_tages || '';
         fields.gratitude.value = entry.dankbarkeit || '';
@@ -1216,6 +1266,18 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         fields.success5.value = entry.erfolg_5 || '';
       } catch (error) {
         if (!String(error.message).includes('not found')) throw error;
+        const persistedDraft = readDraft('daily', dateStr);
+        if (persistedDraft) {
+          loadedDailyEntry = { ...persistedDraft };
+          fields.chance.value = persistedDraft.chance_des_tages || '';
+          fields.gratitude.value = persistedDraft.dankbarkeit || '';
+          fields.task.value = persistedDraft.wichtigste_aufgabe_602020 || '';
+          fields.success1.value = persistedDraft.erfolg_1 || '';
+          fields.success2.value = persistedDraft.erfolg_2 || '';
+          fields.success3.value = persistedDraft.erfolg_3 || '';
+          fields.success4.value = persistedDraft.erfolg_4 || '';
+          fields.success5.value = persistedDraft.erfolg_5 || '';
+        }
         if (!fields.task.value.trim()) syncTaskFromWeeklyPlan(dateStr);
       }
     }
@@ -1286,11 +1348,18 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       strategyWeekLabel.textContent = formatWeekLabel(weekStart);
       applyWeeklyEntry();
       try {
-        const entry = await api(`/api/weekly/${weekStart}`);
+        let entry = await api(`/api/weekly/${weekStart}`);
+        const persistedDraft = readDraft('weekly', weekStart);
+        entry = persistedDraft ? { ...entry, ...persistedDraft } : entry;
         loadedWeeklyEntry = { ...entry };
         applyWeeklyEntry(entry);
       } catch (error) {
         if (!String(error.message).includes('not found')) throw error;
+        const persistedDraft = readDraft('weekly', weekStart);
+        if (persistedDraft) {
+          loadedWeeklyEntry = { ...persistedDraft };
+          applyWeeklyEntry(persistedDraft);
+        }
       }
       syncTaskFromWeeklyPlan(dateStr);
     }
@@ -1317,13 +1386,19 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       const dateStr = fields.date.value;
       if (!dateStr) return;
       if (!Object.keys(loadedDailyEntry).length && ![fields.chance.value.trim(), fields.gratitude.value.trim(), fields.task.value.trim(), fields.success1.value.trim(), fields.success2.value.trim(), fields.success3.value.trim(), fields.success4.value.trim(), fields.success5.value.trim()].some(Boolean)) return;
-      await api(`/api/entries/${dateStr}`, { method: 'PUT', body: JSON.stringify(dailyPayload(dateStr)) });
+      const payload = dailyPayload(dateStr);
+      await api(`/api/entries/${dateStr}`, { method: 'PUT', body: JSON.stringify(payload) });
+      loadedDailyEntry = { ...payload };
+      clearDraft('daily', dateStr);
       if (!options.silent) showStatus(`Automatisch gespeichert: ${formatGermanDate(dateStr)}`);
     }
     async function saveWeeklyEntry(options = {}) {
       const dateStr = fields.date.value || todayString();
       if (!Object.keys(loadedWeeklyEntry).length && ![fields.mottoLong.value.trim(), fields.focusWeek.value.trim(), fields.priorityWeek.value.trim(), fields.weeklyHealth.value.trim(), fields.weeklyRelationships.value.trim(), fields.weeklyFinances.value.trim(), fields.weeklyEmotions.value.trim(), fields.weeklyPurpose.value.trim(), ...weeklyEntryFields.map(key => fields[key].value.trim())].some(Boolean)) return;
-      await api(`/api/weekly/${getStartOfWeek(dateStr)}`, { method: 'PUT', body: JSON.stringify(weeklyPayload(dateStr)) });
+      const payload = weeklyPayload(dateStr);
+      await api(`/api/weekly/${getStartOfWeek(dateStr)}`, { method: 'PUT', body: JSON.stringify(payload) });
+      loadedWeeklyEntry = { ...payload };
+      clearDraft('weekly', getStartOfWeek(dateStr));
       if (!options.silent) showStatus(`Woche gespeichert: ${formatWeekRange(dateStr)}`);
     }
     async function clearCurrentDay() {
@@ -1470,14 +1545,17 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       if (failedSaves.length) throw failedSaves[0].reason || new Error('Autosave fehlgeschlagen');
     }
     function scheduleStrategyAutosave() {
+      persistStrategyDraft();
       clearTimeout(strategyAutosaveTimer);
       strategyAutosaveTimer = setTimeout(() => saveStrategy({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
     function scheduleDailyAutosave() {
+      persistDailyDraft();
       clearTimeout(dailyAutosaveTimer);
       dailyAutosaveTimer = setTimeout(() => saveEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
     function scheduleWeeklyAutosave() {
+      persistWeeklyDraft();
       clearTimeout(weeklyAutosaveTimer);
       weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
@@ -1549,6 +1627,18 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         el.addEventListener('input', () => syncTaskFromWeeklyPlan(fields.date.value));
         el.addEventListener('change', () => syncTaskFromWeeklyPlan(fields.date.value));
       }
+    });
+    window.addEventListener('beforeunload', () => {
+      persistVisibleDrafts();
+    });
+    window.addEventListener('pagehide', () => {
+      persistVisibleDrafts();
+      flushPendingSaves().catch(() => {});
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'hidden') return;
+      persistVisibleDrafts();
+      flushPendingSaves().catch(() => {});
     });
     async function initAuthenticatedApp() {
       if (appInitialized) return;
