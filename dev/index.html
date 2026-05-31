@@ -23,9 +23,11 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     label { display: block; font-weight: 600; margin-bottom: 8px; }
     input[type="text"], input[type="password"], select, .note-editor { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font: inherit; }
-    .note-editor { min-height: 110px; resize: none; overflow-y: visible; white-space: pre-wrap; word-break: break-word; outline: none; font-style: italic; }
+    .note-editor { min-height: calc(1.55em + 26px); resize: none; overflow-y: visible; white-space: pre-wrap; word-break: break-word; outline: none; font-style: italic; }
+    .note-editor * { background: transparent !important; color: inherit !important; text-shadow: none !important; -webkit-text-stroke: 0 !important; text-stroke: 0 !important; }
     .note-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18); }
-    .small .note-editor { min-height: 80px; }
+    .small .note-editor { min-height: calc(1.55em + 26px); }
+    .readonly-mirror { background: rgba(255, 255, 255, 0.03); cursor: default; }
     .meta { color: var(--muted); font-size: 0.95rem; }
     .law-box { border-left: 5px solid var(--accent); background: rgba(34, 197, 94, 0.08); padding: 18px; border-radius: 12px; }
     .law-title { font-size: 1.35rem; font-weight: 800; margin: 0 0 12px; color: var(--text); }
@@ -40,6 +42,13 @@
     .date-inline { display: flex; align-items: center; gap: 12px; }
     .date-inline .date-display { flex: 1; }
     .week-chip { white-space: nowrap; font-weight: 700; color: var(--accent); }
+    .weekly-focus-section { display: grid; gap: 12px; margin-top: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255, 255, 255, 0.03); }
+    .weekly-focus-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .weekly-focus-title { margin: 0; color: var(--accent); font-size: 1rem; }
+    .week-block-nav { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 0; }
+    .week-block-nav .ghost { padding: 8px 12px; }
+    .week-block-nav .week-label-strong { font-size: 1rem; }
+    .week-block-nav-actions { display: inline-flex; align-items: center; gap: 10px; }
     button { border: 0; border-radius: 10px; padding: 12px 16px; font: inherit; font-weight: 700; cursor: pointer; }
     .ghost { background: #334155; color: var(--text); }
     .status { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(34, 197, 94, 0.10); border: 1px solid rgba(34, 197, 94, 0.35); color: #dcfce7; display: none; }
@@ -65,7 +74,7 @@
     .year-panel.active { display: grid; }
     .year-kompass-grid { display: grid; gap: 14px; }
     .year-note { color: var(--muted); margin-top: -4px; }
-    .year-block .note-editor { min-height: 120px; }
+    .year-block .note-editor { min-height: calc(1.55em + 26px); }
     .year-full-page-textarea { min-height: 70vh; }
     .helpful-section-grid { display: grid; gap: 16px; }
     .helpful-reference-card { display: grid; gap: 12px; }
@@ -143,54 +152,55 @@
         <div class="stack-list">
           <div class="small">
             <label for="identityBlock">Identität</label>
-            <div id="identityBlock" class="note-editor" contenteditable="true"></div>
+            <div id="identityBlock" class="note-editor readonly-mirror" contenteditable="false"></div>
           </div>
           <div class="small">
-            <label for="missionBlock">Lebenssinn/Mission</label>
-            <div id="missionBlock" class="note-editor" contenteditable="true"></div>
+            <label for="purposeBlock">Lebenssinn</label>
+            <div id="purposeBlock" class="note-editor readonly-mirror" contenteditable="false"></div>
           </div>
           <div class="small">
-            <label for="valuesBlock">Werte/Rollen/Glaubenssätze</label>
-            <div id="valuesBlock" class="note-editor" contenteditable="true"></div>
+            <label for="missionBlock">Mission-Statement</label>
+            <div id="missionBlock" class="note-editor readonly-mirror" contenteditable="false"></div>
           </div>
           <div class="small">
-            <div class="area-row">
-              <div>
-                <label for="goalLong10">10-Jahres-Ziele – Kurzfassung</label>
-                <div id="goalLong10" class="note-editor" contenteditable="true"></div>
+            <label for="valuesBlock">Werte</label>
+            <div id="valuesBlock" class="note-editor readonly-mirror" contenteditable="false"></div>
+          </div>
+          <div class="small">
+            <label for="goalLong10Mirror">10-Jahres-Ziele – Kurzfassung</label>
+            <div id="goalLong10Mirror" class="note-editor readonly-mirror" contenteditable="false"></div>
+          </div>
+          <div class="small">
+            <label for="goalMid25Mirror">2–5-Jahres-Ziele – Kurzfassung</label>
+            <div id="goalMid25Mirror" class="note-editor readonly-mirror" contenteditable="false"></div>
+          </div>
+          <div class="small">
+            <label for="goalShort1Mirror">1-Jahres-Ziele – Kurzfassung</label>
+            <div id="goalShort1Mirror" class="note-editor readonly-mirror" contenteditable="false"></div>
+          </div>
+          <div class="weekly-focus-section">
+            <div class="weekly-focus-header">
+              <h3 class="weekly-focus-title">Wochenfokus</h3>
+              <div class="week-block-nav">
+                <div class="week-label-strong" id="strategyWeekLabel">KW</div>
+                <div class="week-block-nav-actions">
+                  <button type="button" class="ghost" id="strategyWeekPrevBtn">←</button>
+                  <button type="button" class="ghost" id="strategyWeekNextBtn">→</button>
+                </div>
               </div>
-              <button type="button" class="subtle-open-btn" id="openTenYearGoalsBtn">Details</button>
             </div>
-          </div>
-          <div class="small">
-            <div class="area-row">
-              <div>
-                <label for="goalMid25">2–5-Jahres-Ziele – Kurzfassung</label>
-                <div id="goalMid25" class="note-editor" contenteditable="true"></div>
-              </div>
-              <button type="button" class="subtle-open-btn" id="openMidTermGoalsBtn">Details</button>
+            <div class="small">
+              <label for="mottoLong">Motto: (langfr.)</label>
+              <div id="mottoLong" class="note-editor" contenteditable="true"></div>
             </div>
-          </div>
-          <div class="small">
-            <div class="area-row">
-              <div>
-                <label for="goalShort1">1-Jahres-Ziele – Kurzfassung</label>
-                <div id="goalShort1" class="note-editor" contenteditable="true"></div>
-              </div>
-              <button type="button" class="subtle-open-btn" id="openShortTermGoalsBtn">Details</button>
+            <div class="small">
+              <label for="focusWeek">Fokus: (diese Woche)</label>
+              <div id="focusWeek" class="note-editor" contenteditable="true"></div>
             </div>
-          </div>
-          <div class="small">
-            <label for="mottoLong">Motto: (langfr.)</label>
-            <div id="mottoLong" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="focusWeek">Fokus: (diese Woche)</label>
-            <div id="focusWeek" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="priorityWeek">Prioritäten dieser Woche</label>
-            <div id="priorityWeek" class="note-editor" contenteditable="true"></div>
+            <div class="small">
+              <label for="priorityWeek">Prioritäten dieser Woche</label>
+              <div id="priorityWeek" class="note-editor" contenteditable="true"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -210,7 +220,6 @@
             </div>
             <input id="entryDate" class="hidden-date" type="date">
           </div>
-          <button class="ghost" id="clearBtn">Diesen Tag leeren</button>
         </div>
         <div class="small">
           <label for="chance">1. Warum ist der heutige Tag eine Chance?</label>
@@ -231,10 +240,6 @@
             <div class="law-text" id="lawText"></div>
           </div>
         </div>
-        <div class="small">
-          <label for="lawAction">5. Wie lebe ich dieses Gesetz heute?</label>
-          <div id="lawAction" class="note-editor" contenteditable="true"></div>
-        </div>
       </div>
 
       <div class="card">
@@ -246,129 +251,16 @@
           <div class="small"><label for="success4">Erfolg 4</label><div id="success4" class="note-editor" contenteditable="true"></div></div>
           <div class="small"><label for="success5">Erfolg 5</label><div id="success5" class="note-editor" contenteditable="true"></div></div>
         </div>
-        <div class="grid">
-          <div>
-            <label for="taskStatus">Wichtigste Aufgabe heute: gelungen?</label>
-            <select id="taskStatus">
-              <option value="">Bitte wählen</option>
-              <option value="gelungen">gelungen</option>
-              <option value="teilweise">teilweise gelungen</option>
-              <option value="nicht">nicht gelungen</option>
-            </select>
-          </div>
-          <div>
-            <label for="lawStatus">Gesetz des Tages: gelungen?</label>
-            <select id="lawStatus">
-              <option value="">Bitte wählen</option>
-              <option value="gelungen">gelungen</option>
-              <option value="teilweise">teilweise gelungen</option>
-              <option value="nicht">nicht gelungen</option>
-            </select>
-          </div>
-        </div>
-        <div class="small">
-          <label for="taskWhy">Warum war die wichtigste Aufgabe gelungen oder nicht gelungen?</label>
-          <div id="taskWhy" class="note-editor" contenteditable="true"></div>
-        </div>
-        <div class="small">
-          <label for="lawWhy">Warum ist mir das Gesetz gelungen oder nicht gelungen?</label>
-          <div id="lawWhy" class="note-editor" contenteditable="true"></div>
-        </div>
       </div>
     </div>
       </div>
-
-      <div class="card goal-detail-page" id="tenYearGoalsDetail">
-        <div class="area-detail-header">
-          <div>
-            <h3>10-Jahres-Ziele</h3>
-            <div class="meta">Aus dem Ziele-Blatt: Datum, Sein, Tun und Haben. Die Kurzfassung steht auf der Hauptseite; hier ist die ausführliche Seite.</div>
-          </div>
-          <button type="button" class="ghost" id="closeTenYearGoalsBtn">Zurück</button>
-        </div>
-        <div class="stack-list">
-          <div class="small">
-            <label for="goal10Date">Datum</label>
-            <input id="goal10Date" type="text">
-          </div>
-          <div class="small">
-            <label for="goal10Being">Sein:</label>
-            <div id="goal10Being" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goal10Doing">Tun:</label>
-            <div id="goal10Doing" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goal10Having">Haben:</label>
-            <div id="goal10Having" class="note-editor" contenteditable="true"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card goal-detail-page" id="midTermGoalsDetail">
-        <div class="area-detail-header">
-          <div>
-            <h3>2–5-Jahres-Ziele</h3>
-            <div class="meta">Aus dem Ziele-Blatt: Datum, Sein, Tun und Haben. Die Kurzfassung steht auf der Hauptseite; hier ist die ausführliche Seite.</div>
-          </div>
-          <button type="button" class="ghost" id="closeMidTermGoalsBtn">Zurück</button>
-        </div>
-        <div class="stack-list">
-          <div class="small">
-            <label for="goalMidDate">Datum</label>
-            <input id="goalMidDate" type="text">
-          </div>
-          <div class="small">
-            <label for="goalMidBeing">Sein:</label>
-            <div id="goalMidBeing" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goalMidDoing">Tun:</label>
-            <div id="goalMidDoing" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goalMidHaving">Haben:</label>
-            <div id="goalMidHaving" class="note-editor" contenteditable="true"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card goal-detail-page" id="shortTermGoalsDetail">
-        <div class="area-detail-header">
-          <div>
-            <h3>1-Jahres-Ziele</h3>
-            <div class="meta">Aus dem Ziele-Blatt: Datum, Sein, Tun und Haben. Die Kurzfassung steht auf der Hauptseite; hier ist die ausführliche Seite.</div>
-          </div>
-          <button type="button" class="ghost" id="closeShortTermGoalsBtn">Zurück</button>
-        </div>
-        <div class="stack-list">
-          <div class="small">
-            <label for="goalShortDate">Datum</label>
-            <input id="goalShortDate" type="text">
-          </div>
-          <div class="small">
-            <label for="goalShortBeing">Sein:</label>
-            <div id="goalShortBeing" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goalShortDoing">Tun:</label>
-            <div id="goalShortDoing" class="note-editor" contenteditable="true"></div>
-          </div>
-          <div class="small">
-            <label for="goalShortHaving">Haben:</label>
-            <div id="goalShortHaving" class="note-editor" contenteditable="true"></div>
-          </div>
-        </div>
-      </div>
-
-
     <div id="yearPlanningView" class="year-planning-view">
       <div class="card year-card">
         <h2>Jahresplanung</h2>
         <div class="meta">Langfristige Orientierung, Erfolgsfragen und Jahresblöcke.</div>
         <div class="year-section-nav">
           <button type="button" class="year-section-btn active" data-year-section="year-section-compass">Kompass</button>
+          <button type="button" class="year-section-btn" data-year-section="year-section-goals">Ziele</button>
           <button type="button" class="year-section-btn" data-year-section="year-section-guiding">Leitsätze</button>
           <button type="button" class="year-section-btn" data-year-section="year-section-success">Erfolgsfragen</button>
           <button type="button" class="year-section-btn" data-year-section="year-section-lessons">Lehren</button>
@@ -407,7 +299,47 @@
           <div class="small year-block"><label for="year-compass-purpose">Lebenssinn</label><div id="year-compass-purpose" class="note-editor" contenteditable="true"></div></div>
           <div class="small year-block"><label for="year-compass-mission">Mission-Statement</label><div id="year-compass-mission" class="note-editor" contenteditable="true"></div></div>
           <div class="small year-block"><label for="year-compass-values">Werte</label><div id="year-compass-values" class="note-editor" contenteditable="true"></div></div>
-          <div class="small year-block"><label for="year-compass-beliefs">Glaubenssätze</label><div id="year-compass-beliefs" class="note-editor" contenteditable="true"></div></div>
+        </div>
+      </div>
+
+      <div class="card year-card year-section year-panel" id="year-section-goals">
+        <h3>Ziele</h3>
+        <div class="stack-list">
+          <div class="small year-block">
+            <label for="goalLong10">10-Jahres-Ziele – Kurzfassung</label>
+            <div id="goalLong10" class="note-editor" contenteditable="true"></div>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <h4>10-Jahres-Ziele</h4>
+              <div class="stack-list">
+                <div class="small"><label for="goal10Date">Datum</label><input id="goal10Date" type="text"></div>
+                <div class="small"><label for="goal10Being">Sein:</label><div id="goal10Being" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goal10Doing">Tun:</label><div id="goal10Doing" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goal10Having">Haben:</label><div id="goal10Having" class="note-editor" contenteditable="true"></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>2–5-Jahres-Ziele</h4>
+              <div class="stack-list">
+                <div class="small"><label for="goalMid25">2–5-Jahres-Ziele – Kurzfassung</label><div id="goalMid25" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalMidDate">Datum</label><input id="goalMidDate" type="text"></div>
+                <div class="small"><label for="goalMidBeing">Sein:</label><div id="goalMidBeing" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalMidDoing">Tun:</label><div id="goalMidDoing" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalMidHaving">Haben:</label><div id="goalMidHaving" class="note-editor" contenteditable="true"></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>1-Jahres-Ziele</h4>
+              <div class="stack-list">
+                <div class="small"><label for="goalShort1">1-Jahres-Ziele – Kurzfassung</label><div id="goalShort1" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalShortDate">Datum</label><input id="goalShortDate" type="text"></div>
+                <div class="small"><label for="goalShortBeing">Sein:</label><div id="goalShortBeing" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalShortDoing">Tun:</label><div id="goalShortDoing" class="note-editor" contenteditable="true"></div></div>
+                <div class="small"><label for="goalShortHaving">Haben:</label><div id="goalShortHaving" class="note-editor" contenteditable="true"></div></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -874,20 +806,20 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       { key: 'monthly', title: 'Monatlich' },
       { key: 'done', title: 'Umgesetzt' },
     ];
-    const yearPlanningFields = Array.from({ length: 16 }, (_item, index) => `yearSuccessQuestion${index + 1}`).concat(['yearCompassIdentity', 'yearCompassPurpose', 'yearCompassMission', 'yearCompassValues', 'yearCompassBeliefs', 'yearGuidingPrinciples', 'yearLessonsPast', 'yearSuccesses2025', 'yearLifeSuccesses']);
-    const strategyFields = ['mottoLong', 'focusWeek', 'identityBlock', 'missionBlock', 'valuesBlock', 'goalLong10', 'goal10Date', 'goal10Being', 'goal10Doing', 'goal10Having', 'goalMid25', 'goalMidDate', 'goalMidBeing', 'goalMidDoing', 'goalMidHaving', 'goalShort1', 'goalShortDate', 'goalShortBeing', 'goalShortDoing', 'goalShortHaving', 'priorityWeek', 'weeklyHealth', 'weeklyRelationships', 'weeklyFinances', 'weeklyEmotions', 'weeklyPurpose', 'weeklyJoy', 'weeklyLearning', 'weeklySuccessJournal', 'weeklySuccessMove', ...yearPlanningFields];
+    const yearPlanningFields = Array.from({ length: 16 }, (_item, index) => `yearSuccessQuestion${index + 1}`).concat(['yearCompassIdentity', 'yearCompassPurpose', 'yearCompassMission', 'yearCompassValues', 'yearGuidingPrinciples', 'yearLessonsPast', 'yearSuccesses2025', 'yearLifeSuccesses']);
+    const weeklyStrategyFields = ['mottoLong', 'focusWeek', 'priorityWeek'];
+    const strategyFields = ['goalLong10', 'goal10Date', 'goal10Being', 'goal10Doing', 'goal10Having', 'goalMid25', 'goalMidDate', 'goalMidBeing', 'goalMidDoing', 'goalMidHaving', 'goalShort1', 'goalShortDate', 'goalShortBeing', 'goalShortDoing', 'goalShortHaving', 'weeklyHealth', 'weeklyRelationships', 'weeklyFinances', 'weeklyEmotions', 'weeklyPurpose', 'weeklyJoy', 'weeklyLearning', 'weeklySuccessJournal', 'weeklySuccessMove', ...yearPlanningFields];
     areaConfigs.forEach(area => areaSectionConfigs.forEach(section => strategyFields.push(`area_${area.key}_${section.key}`)));
-    const dailyFields = ['date', 'displayDate', 'chance', 'gratitude', 'task', 'lawAction', 'success1', 'success2', 'success3', 'success4', 'success5', 'taskStatus', 'taskWhy', 'lawStatus', 'lawWhy'];
+    const dailyFields = ['date', 'displayDate', 'chance', 'gratitude', 'task', 'success1', 'success2', 'success3', 'success4', 'success5'];
     const weeklyDayKeys = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
     const ids = {
       date: 'entryDate', displayDate: 'displayDate',
-      mottoLong: 'mottoLong', focusWeek: 'focusWeek', identityBlock: 'identityBlock', missionBlock: 'missionBlock', valuesBlock: 'valuesBlock', goalLong10: 'goalLong10', goal10Date: 'goal10Date', goal10Being: 'goal10Being', goal10Doing: 'goal10Doing', goal10Having: 'goal10Having', goalMid25: 'goalMid25', goalMidDate: 'goalMidDate', goalMidBeing: 'goalMidBeing', goalMidDoing: 'goalMidDoing', goalMidHaving: 'goalMidHaving', goalShort1: 'goalShort1', goalShortDate: 'goalShortDate', goalShortBeing: 'goalShortBeing', goalShortDoing: 'goalShortDoing', goalShortHaving: 'goalShortHaving', priorityWeek: 'priorityWeek',
-      chance: 'chance', gratitude: 'gratitude', task: 'task', lawAction: 'lawAction',
+      mottoLong: 'mottoLong', focusWeek: 'focusWeek', identityBlock: 'identityBlock', purposeBlock: 'purposeBlock', missionBlock: 'missionBlock', valuesBlock: 'valuesBlock', goalLong10Mirror: 'goalLong10Mirror', goalMid25Mirror: 'goalMid25Mirror', goalShort1Mirror: 'goalShort1Mirror', goalLong10: 'goalLong10', goal10Date: 'goal10Date', goal10Being: 'goal10Being', goal10Doing: 'goal10Doing', goal10Having: 'goal10Having', goalMid25: 'goalMid25', goalMidDate: 'goalMidDate', goalMidBeing: 'goalMidBeing', goalMidDoing: 'goalMidDoing', goalMidHaving: 'goalMidHaving', goalShort1: 'goalShort1', goalShortDate: 'goalShortDate', goalShortBeing: 'goalShortBeing', goalShortDoing: 'goalShortDoing', goalShortHaving: 'goalShortHaving', priorityWeek: 'priorityWeek',
+      chance: 'chance', gratitude: 'gratitude', task: 'task',
       success1: 'success1', success2: 'success2', success3: 'success3', success4: 'success4', success5: 'success5',
-      taskStatus: 'taskStatus', taskWhy: 'taskWhy', lawStatus: 'lawStatus', lawWhy: 'lawWhy',
       weeklyHealth: 'weeklyHealth', weeklyRelationships: 'weeklyRelationships', weeklyFinances: 'weeklyFinances', weeklyEmotions: 'weeklyEmotions', weeklyPurpose: 'weeklyPurpose',
       weeklyJoy: 'weeklyJoy', weeklyLearning: 'weeklyLearning', weeklySuccessJournal: 'weeklySuccessJournal', weeklySuccessMove: 'weeklySuccessMove',
-      yearCompassIdentity: 'year-compass-identity', yearCompassPurpose: 'year-compass-purpose', yearCompassMission: 'year-compass-mission', yearCompassValues: 'year-compass-values', yearCompassBeliefs: 'year-compass-beliefs',
+      yearCompassIdentity: 'year-compass-identity', yearCompassPurpose: 'year-compass-purpose', yearCompassMission: 'year-compass-mission', yearCompassValues: 'year-compass-values',
       yearGuidingPrinciples: 'year-guiding-principles', yearLessonsPast: 'year-lessons-past', yearSuccesses2025: 'year-successes-2025', yearLifeSuccesses: 'year-life-successes'
     };
     for (let index = 1; index <= 16; index += 1) ids[`yearSuccessQuestion${index}`] = `year-success-question-${index}`;
@@ -900,6 +832,9 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     });
     const fields = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, document.getElementById(id)]));
     const weekLabel = document.getElementById('weekLabel');
+    const strategyWeekPrevBtn = document.getElementById('strategyWeekPrevBtn');
+    const strategyWeekLabel = document.getElementById('strategyWeekLabel');
+    const strategyWeekNextBtn = document.getElementById('strategyWeekNextBtn');
     const weekToggleBtn = document.getElementById('weekToggleBtn');
     const yearPlanToggleBtn = document.getElementById('yearPlanToggleBtn');
     const dailyView = document.getElementById('dailyView');
@@ -915,16 +850,6 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     const closeWeeklyTipsBtn = document.getElementById('closeWeeklyTipsBtn');
     const weeklyViewTitle = document.getElementById('weeklyViewTitle');
     const weeklySundayLabel = document.getElementById('weeklySundayLabel');
-    const dailyMainContent = document.getElementById('dailyMainContent');
-    const openTenYearGoalsBtn = document.getElementById('openTenYearGoalsBtn');
-    const closeTenYearGoalsBtn = document.getElementById('closeTenYearGoalsBtn');
-    const tenYearGoalsDetail = document.getElementById('tenYearGoalsDetail');
-    const openMidTermGoalsBtn = document.getElementById('openMidTermGoalsBtn');
-    const closeMidTermGoalsBtn = document.getElementById('closeMidTermGoalsBtn');
-    const midTermGoalsDetail = document.getElementById('midTermGoalsDetail');
-    const openShortTermGoalsBtn = document.getElementById('openShortTermGoalsBtn');
-    const closeShortTermGoalsBtn = document.getElementById('closeShortTermGoalsBtn');
-    const shortTermGoalsDetail = document.getElementById('shortTermGoalsDetail');
     let currentView = 'daily';
     let isWeeklyViewVisible = false;
     let currentAreaKey = null;
@@ -947,6 +872,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
     let currentSession = null;
     let appInitialized = false;
+    let strategyDefaults = {};
     const weeklyEntryFields = weeklyDayKeys.flatMap(day => [
       `weekly_${day}_activity`, `weekly_${day}_goal`
     ]);
@@ -1162,12 +1088,12 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       throw new Error(`Unbekannter API-Pfad: ${path}`);
     }
     function strategyPayload() {
+      const purposeText = fields.yearCompassPurpose.value.trim();
+      const missionText = fields.yearCompassMission.value.trim();
       const payload = {
-        motto_langfristig: fields.mottoLong.value.trim(),
-        fokus_woche: fields.focusWeek.value.trim(),
-        identitaet: fields.identityBlock.value.trim(),
-        lebenssinn_mission: fields.missionBlock.value.trim(),
-        werte_rollen_glaubenssaetze: fields.valuesBlock.value.trim(),
+        identitaet: fields.yearCompassIdentity.value.trim(),
+        lebenssinn_mission: [purposeText, missionText].filter(Boolean).join('\n\n'),
+        werte_rollen_glaubenssaetze: fields.yearCompassValues.value.trim(),
         langfristige_ziele_10_jahre: fields.goalLong10.value.trim(),
         ziele_10_datum: fields.goal10Date.value.trim(),
         ziele_10_sein: fields.goal10Being.value.trim(),
@@ -1183,7 +1109,6 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         ziele_kurz_sein: fields.goalShortBeing.value.trim(),
         ziele_kurz_tun: fields.goalShortDoing.value.trim(),
         ziele_kurz_haben: fields.goalShortHaving.value.trim(),
-        prioritaeten_dieser_woche: fields.priorityWeek.value.trim(),
         wochenblock_gesundheit: fields.weeklyHealth.value.trim(),
         wochenblock_beziehungen: fields.weeklyRelationships.value.trim(),
         wochenblock_finanzen: fields.weeklyFinances.value.trim(),
@@ -1202,13 +1127,23 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       });
       return payload;
     }
-    async function loadStrategy() {
+    function syncMainCompassMirrors() {
+      fields.identityBlock.value = fields.yearCompassIdentity.value;
+      fields.purposeBlock.value = fields.yearCompassPurpose.value;
+      fields.missionBlock.value = fields.yearCompassMission.value;
+      fields.valuesBlock.value = fields.yearCompassValues.value;
+    }
+    function syncMainGoalMirrors() {
+      fields.goalLong10Mirror.value = fields.goalLong10.value;
+      fields.goalMid25Mirror.value = fields.goalMid25.value;
+      fields.goalShort1Mirror.value = fields.goalShort1.value;
+    }
+    function getCurrentStrategyWeekStart() {
+      return getStartOfWeek(fields.date.value || todayString());
+    }
+    async function loadStrategy(dateStr = getCurrentStrategyWeekStart()) {
       const entry = await api('/api/strategy');
-      fields.mottoLong.value = entry.motto_langfristig || '';
-      fields.focusWeek.value = entry.fokus_woche || '';
-      fields.identityBlock.value = entry.identitaet || '';
-      fields.missionBlock.value = entry.lebenssinn_mission || '';
-      fields.valuesBlock.value = entry.werte_rollen_glaubenssaetze || '';
+      strategyDefaults = entry;
       fields.goalLong10.value = entry.langfristige_ziele_10_jahre || '';
       fields.goal10Date.value = entry.ziele_10_datum || '';
       fields.goal10Being.value = entry.ziele_10_sein || '';
@@ -1224,7 +1159,6 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       fields.goalShortBeing.value = entry.ziele_kurz_sein || '';
       fields.goalShortDoing.value = entry.ziele_kurz_tun || '';
       fields.goalShortHaving.value = entry.ziele_kurz_haben || '';
-      fields.priorityWeek.value = entry.prioritaeten_dieser_woche || '';
       fields.weeklyHealth.value = entry.wochenblock_gesundheit || '';
       fields.weeklyRelationships.value = entry.wochenblock_beziehungen || '';
       fields.weeklyFinances.value = entry.wochenblock_finanzen || '';
@@ -1240,6 +1174,13 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       yearPlanningFields.forEach(key => {
         fields[key].value = entry[`jahresplanung_${key}`] || '';
       });
+      fields.yearCompassIdentity.value = entry.jahresplanung_yearCompassIdentity || entry.identitaet || '';
+      fields.yearCompassPurpose.value = entry.jahresplanung_yearCompassPurpose || entry.lebenssinn_mission || '';
+      fields.yearCompassMission.value = entry.jahresplanung_yearCompassMission || '';
+      fields.yearCompassValues.value = entry.jahresplanung_yearCompassValues || entry.werte_rollen_glaubenssaetze || '';
+      syncMainCompassMirrors();
+      syncMainGoalMirrors();
+      await loadWeeklyEntry(dateStr);
     }
     async function saveStrategy() {
       await api('/api/strategy', { method: 'PUT', body: JSON.stringify(strategyPayload()) });
@@ -1255,16 +1196,11 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         fields.task.value = entry.wichtigste_aufgabe_602020 || '';
         lastAutoFilledWeeklyTask = '';
         if (!fields.task.value.trim()) syncTaskFromWeeklyPlan(dateStr);
-        fields.lawAction.value = entry.gesetz_heute_umsetzung || '';
         fields.success1.value = entry.erfolg_1 || '';
         fields.success2.value = entry.erfolg_2 || '';
         fields.success3.value = entry.erfolg_3 || '';
         fields.success4.value = entry.erfolg_4 || '';
         fields.success5.value = entry.erfolg_5 || '';
-        fields.taskStatus.value = entry.reflexion_aufgabe_status || '';
-        fields.taskWhy.value = entry.reflexion_aufgabe_warum || '';
-        fields.lawStatus.value = entry.reflexion_gesetz_status || '';
-        fields.lawWhy.value = entry.reflexion_gesetz_warum || '';
       } catch (error) {
         if (!String(error.message).includes('not found')) throw error;
         if (!fields.task.value.trim()) syncTaskFromWeeklyPlan(dateStr);
@@ -1281,16 +1217,11 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         chance_des_tages: fields.chance.value.trim(),
         dankbarkeit: fields.gratitude.value.trim(),
         wichtigste_aufgabe_602020: fields.task.value.trim(),
-        gesetz_heute_umsetzung: fields.lawAction.value.trim(),
         erfolg_1: fields.success1.value.trim(),
         erfolg_2: fields.success2.value.trim(),
         erfolg_3: fields.success3.value.trim(),
         erfolg_4: fields.success4.value.trim(),
-        erfolg_5: fields.success5.value.trim(),
-        reflexion_aufgabe_status: fields.taskStatus.value,
-        reflexion_aufgabe_warum: fields.taskWhy.value.trim(),
-        reflexion_gesetz_status: fields.lawStatus.value,
-        reflexion_gesetz_warum: fields.lawWhy.value.trim()
+        erfolg_5: fields.success5.value.trim()
       };
     }
     function weeklyPayload(dateStr) {
@@ -1304,6 +1235,9 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       });
       return {
         week_start: weekStart,
+        motto_langfristig: fields.mottoLong.value.trim(),
+        fokus_woche: fields.focusWeek.value.trim(),
+        prioritaeten_dieser_woche: fields.priorityWeek.value.trim(),
         gesundheit: fields.weeklyHealth.value.trim(),
         beziehungen: fields.weeklyRelationships.value.trim(),
         finanzen: fields.weeklyFinances.value.trim(),
@@ -1312,7 +1246,11 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         tage,
       };
     }
-    function applyWeeklyEntry(entry) {
+    function applyWeeklyEntry(entry = {}) {
+      const hasOwn = (key) => Object.prototype.hasOwnProperty.call(entry, key);
+      fields.mottoLong.value = hasOwn('motto_langfristig') ? (entry.motto_langfristig || '') : '';
+      fields.focusWeek.value = hasOwn('fokus_woche') ? (entry.fokus_woche || '') : '';
+      fields.priorityWeek.value = hasOwn('prioritaeten_dieser_woche') ? (entry.prioritaeten_dieser_woche || '') : '';
       weeklyDayKeys.forEach(day => {
         const dayEntry = entry.tage?.[day] || {};
         fields[`weekly_${day}_activity`].value = dayEntry.aktivitaet || dayEntry.block1 || '';
@@ -1321,10 +1259,13 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     }
     async function loadWeeklyEntry(dateStr) {
       clearWeeklyFormOnly();
-      weeklyViewTitle.textContent = formatWeekRange(dateStr);
-      weeklySundayLabel.textContent = formatSundayLabel(dateStr);
+      const weekStart = getStartOfWeek(dateStr);
+      weeklyViewTitle.textContent = formatWeekRange(weekStart);
+      weeklySundayLabel.textContent = formatSundayLabel(weekStart);
+      strategyWeekLabel.textContent = formatWeekLabel(weekStart);
+      applyWeeklyEntry();
       try {
-        const entry = await api(`/api/weekly/${getStartOfWeek(dateStr)}`);
+        const entry = await api(`/api/weekly/${weekStart}`);
         applyWeeklyEntry(entry);
       } catch (error) {
         if (!String(error.message).includes('not found')) throw error;
@@ -1336,10 +1277,18 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       await loadWeeklyEntry(dateStr);
       await loadEntry(dateStr);
     }
+    async function setStrategyWeek(dateStr) {
+      await setCurrentDate(dateStr);
+    }
     async function shiftCurrentDate(days) {
       const currentDate = parseIsoDate(fields.date.value || todayString());
       currentDate.setDate(currentDate.getDate() + days);
       await setCurrentDate(isoDate(currentDate));
+    }
+    async function shiftStrategyWeek(weeks) {
+      const currentDate = parseIsoDate(fields.date.value || todayString());
+      currentDate.setDate(currentDate.getDate() + (weeks * 7));
+      await setStrategyWeek(isoDate(currentDate));
     }
     async function saveEntry() {
       const dateStr = fields.date.value;
@@ -1361,26 +1310,83 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       showStatus(`Eintrag gelöscht: ${formatGermanDate(dateStr)}`);
     }
     let activeEditor = null;
+    const EDITOR_BLOCK_TAGS = new Set(['ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'DIV', 'FIGCAPTION', 'FIGURE', 'FOOTER', 'HEADER', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'MAIN', 'NAV', 'P', 'PRE', 'SECTION']);
+    function normalizeEditorText(text) {
+      return String(text || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/\r\n?/g, '\n')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n');
+    }
+    function plainTextFromEditorDom(root) {
+      let text = '';
+      const appendNewline = () => {
+        if (text && !text.endsWith('\n')) text += '\n';
+      };
+      const walk = node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.nodeValue || '';
+          return;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const tag = node.tagName;
+          if (tag === 'BR') {
+            appendNewline();
+            return;
+          }
+          if (tag === 'SCRIPT' || tag === 'STYLE') return;
+          const isBlock = EDITOR_BLOCK_TAGS.has(tag);
+          if (isBlock) appendNewline();
+          node.childNodes.forEach(walk);
+          if (isBlock) appendNewline();
+          return;
+        }
+        node.childNodes.forEach(walk);
+      };
+      root.childNodes.forEach(walk);
+      return normalizeEditorText(text).replace(/\n+$/g, '');
+    }
+    function plainTextFromStoredEditorValue(value) {
+      if (value == null) return '';
+      const raw = String(value);
+      const template = document.createElement('template');
+      template.innerHTML = raw;
+      const parsedText = plainTextFromEditorDom(template.content);
+      return /<\/?[a-z][\s\S]*>/i.test(raw) ? parsedText : (parsedText || normalizeEditorText(raw));
+    }
+    function insertPlainTextIntoEditor(editor, text) {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return false;
+      const anchor = selection.anchorNode;
+      if (!anchor || (anchor !== editor && !editor.contains(anchor))) return false;
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const textNode = document.createTextNode(normalizeEditorText(text));
+      range.insertNode(textNode);
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return true;
+    }
     function initRichTextEditors() {
       document.querySelectorAll('.note-editor').forEach(editor => {
         if (editor.dataset.richEditorReady === 'true') return;
         editor.dataset.richEditorReady = 'true';
         Object.defineProperty(editor, 'value', {
-          get() { return editor.innerHTML; },
-          set(value) { editor.innerHTML = value || ''; }
+          get() { return plainTextFromEditorDom(editor); },
+          set(value) { editor.textContent = plainTextFromStoredEditorValue(value); }
         });
         editor.addEventListener('focus', () => { activeEditor = editor; });
         editor.addEventListener('input', () => { activeEditor = editor; });
+        editor.addEventListener('paste', event => {
+          event.preventDefault();
+          const text = event.clipboardData?.getData('text/plain') || '';
+          if (!insertPlainTextIntoEditor(editor, text)) editor.textContent += normalizeEditorText(text);
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+        });
       });
-    }
-    function openGoalDetail(detailEl) {
-      document.querySelectorAll('.goal-detail-page').forEach(page => { page.style.display = page === detailEl ? 'block' : 'none'; });
-      const isVisible = Boolean(detailEl);
-      dailyMainContent.style.display = isVisible ? 'none' : 'block';
-      if (isVisible) window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    function closeGoalDetail() {
-      openGoalDetail(null);
     }
     function setWeeklyTipsVisible(isVisible) {
       if (weeklyTipsPanel) weeklyTipsPanel.style.display = isVisible ? 'block' : 'none';
@@ -1441,12 +1447,6 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
     }
     initRichTextEditors();
-    openTenYearGoalsBtn.addEventListener('click', () => openGoalDetail(tenYearGoalsDetail));
-    openMidTermGoalsBtn.addEventListener('click', () => openGoalDetail(midTermGoalsDetail));
-    openShortTermGoalsBtn.addEventListener('click', () => openGoalDetail(shortTermGoalsDetail));
-    closeTenYearGoalsBtn.addEventListener('click', () => closeGoalDetail());
-    closeMidTermGoalsBtn.addEventListener('click', () => closeGoalDetail());
-    closeShortTermGoalsBtn.addEventListener('click', () => closeGoalDetail());
     fields.date.addEventListener('change', async () => {
       try {
         await setCurrentDate(fields.date.value);
@@ -1468,9 +1468,8 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     todayBtn.addEventListener('click', () => setCurrentDate(todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     nextDayBtn.addEventListener('click', () => shiftCurrentDate(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      clearCurrentDay().catch(error => showStatus(`Fehler: ${error.message}`, true));
-    });
+    strategyWeekPrevBtn.addEventListener('click', () => shiftStrategyWeek(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
+    strategyWeekNextBtn.addEventListener('click', () => shiftStrategyWeek(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     areaConfigs.forEach(area => {
       const openBtn = document.getElementById(`open-area-${area.key}`);
       if (openBtn) openBtn.addEventListener('click', () => setAreaDetailVisible(area.key));
@@ -1491,11 +1490,23 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       detailField.addEventListener('input', syncCurrentArea);
       detailField.addEventListener('change', syncCurrentArea);
     });
+    ['yearCompassIdentity', 'yearCompassPurpose', 'yearCompassMission', 'yearCompassValues'].forEach(key => {
+      const el = fields[key];
+      if (!el) return;
+      el.addEventListener('input', syncMainCompassMirrors);
+      el.addEventListener('change', syncMainCompassMirrors);
+    });
+    ['goalLong10', 'goalMid25', 'goalShort1'].forEach(key => {
+      const el = fields[key];
+      if (!el) return;
+      el.addEventListener('input', syncMainGoalMirrors);
+      el.addEventListener('change', syncMainGoalMirrors);
+    });
     Object.entries(fields).forEach(([key, el]) => {
       if (!el || key === 'date' || key === 'displayDate') return;
       let handler = scheduleDailyAutosave;
       if (strategyFields.includes(key)) handler = scheduleStrategyAutosave;
-      else if (weeklyEntryFields.includes(key)) handler = scheduleWeeklyAutosave;
+      else if (weeklyEntryFields.includes(key) || weeklyStrategyFields.includes(key)) handler = scheduleWeeklyAutosave;
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
       if (weeklyEntryFields.includes(key)) {
@@ -1507,8 +1518,8 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       if (appInitialized) return;
       fields.date.value = todayString();
       setView(false);
-      await loadStrategy();
-      await setCurrentDate(fields.date.value);
+      await loadStrategy(fields.date.value);
+      await loadEntry(fields.date.value);
       appInitialized = true;
     }
     async function applySession(session) {
