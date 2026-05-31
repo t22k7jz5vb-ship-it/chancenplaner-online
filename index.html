@@ -873,6 +873,9 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     let currentSession = null;
     let appInitialized = false;
     let strategyDefaults = {};
+    let loadedStrategyEntry = {};
+    let loadedDailyEntry = {};
+    let loadedWeeklyEntry = {};
     const weeklyEntryFields = weeklyDayKeys.flatMap(day => [
       `weekly_${day}_activity`, `weekly_${day}_goal`
     ]);
@@ -1090,7 +1093,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     function strategyPayload() {
       const purposeText = fields.yearCompassPurpose.value.trim();
       const missionText = fields.yearCompassMission.value.trim();
-      const payload = {
+      const payload = { ...loadedStrategyEntry,
         identitaet: fields.yearCompassIdentity.value.trim(),
         lebenssinn_mission: [purposeText, missionText].filter(Boolean).join('\n\n'),
         werte_rollen_glaubenssaetze: fields.yearCompassValues.value.trim(),
@@ -1141,9 +1144,16 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     function getCurrentStrategyWeekStart() {
       return getStartOfWeek(fields.date.value || todayString());
     }
+    function splitLegacyPurposeMission(value) {
+      const normalized = String(value || '').replace(/\r\n?/g, '\n');
+      const parts = normalized.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean);
+      if (parts.length <= 1) return { purpose: normalized.trim(), mission: '' };
+      return { purpose: parts[0], mission: parts.slice(1).join('\n\n') };
+    }
     async function loadStrategy(dateStr = getCurrentStrategyWeekStart()) {
       const entry = await api('/api/strategy');
       strategyDefaults = entry;
+      loadedStrategyEntry = { ...entry };
       fields.goalLong10.value = entry.langfristige_ziele_10_jahre || '';
       fields.goal10Date.value = entry.ziele_10_datum || '';
       fields.goal10Being.value = entry.ziele_10_sein || '';
@@ -1174,23 +1184,26 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       yearPlanningFields.forEach(key => {
         fields[key].value = entry[`jahresplanung_${key}`] || '';
       });
+      const legacyPurposeMission = splitLegacyPurposeMission(entry.lebenssinn_mission);
       fields.yearCompassIdentity.value = entry.jahresplanung_yearCompassIdentity || entry.identitaet || '';
-      fields.yearCompassPurpose.value = entry.jahresplanung_yearCompassPurpose || entry.lebenssinn_mission || '';
-      fields.yearCompassMission.value = entry.jahresplanung_yearCompassMission || '';
-      fields.yearCompassValues.value = entry.jahresplanung_yearCompassValues || entry.werte_rollen_glaubenssaetze || '';
+      fields.yearCompassPurpose.value = entry.jahresplanung_yearCompassPurpose || legacyPurposeMission.purpose || '';
+      fields.yearCompassMission.value = entry.jahresplanung_yearCompassMission || legacyPurposeMission.mission || '';
+      fields.yearCompassValues.value = entry.jahresplanung_yearCompassValues || entry.jahresplanung_yearCompassBeliefs || entry.werte_rollen_glaubenssaetze || '';
       syncMainCompassMirrors();
       syncMainGoalMirrors();
       await loadWeeklyEntry(dateStr);
     }
-    async function saveStrategy() {
+    async function saveStrategy(options = {}) {
       await api('/api/strategy', { method: 'PUT', body: JSON.stringify(strategyPayload()) });
-      showStatus('Strategieblock gespeichert');
+      if (!options.silent) showStatus('Strategieblock gespeichert');
     }
     async function loadEntry(dateStr) {
       clearDailyFormOnly();
       renderLaw(dateStr);
+      loadedDailyEntry = {};
       try {
         const entry = await api(`/api/entries/${dateStr}`);
+        loadedDailyEntry = { ...entry };
         fields.chance.value = entry.chance_des_tages || '';
         fields.gratitude.value = entry.dankbarkeit || '';
         fields.task.value = entry.wichtigste_aufgabe_602020 || '';
@@ -1209,14 +1222,20 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     function dailyPayload(dateStr) {
       const law = renderLaw(dateStr);
       return {
+        ...loadedDailyEntry,
         datum: dateStr,
         tag_im_zyklus: law.cycleDay,
         gesetz_index: law.lawIndex,
         gesetz_titel: law.title,
         gesetz_text: law.text,
+        gesetz_heute_umsetzung: loadedDailyEntry.gesetz_heute_umsetzung || '',
         chance_des_tages: fields.chance.value.trim(),
         dankbarkeit: fields.gratitude.value.trim(),
         wichtigste_aufgabe_602020: fields.task.value.trim(),
+        reflexion_aufgabe_status: loadedDailyEntry.reflexion_aufgabe_status || '',
+        reflexion_aufgabe_warum: loadedDailyEntry.reflexion_aufgabe_warum || '',
+        reflexion_gesetz_status: loadedDailyEntry.reflexion_gesetz_status || '',
+        reflexion_gesetz_warum: loadedDailyEntry.reflexion_gesetz_warum || '',
         erfolg_1: fields.success1.value.trim(),
         erfolg_2: fields.success2.value.trim(),
         erfolg_3: fields.success3.value.trim(),
@@ -1234,6 +1253,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
         };
       });
       return {
+        ...loadedWeeklyEntry,
         week_start: weekStart,
         motto_langfristig: fields.mottoLong.value.trim(),
         fokus_woche: fields.focusWeek.value.trim(),
@@ -1259,6 +1279,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     }
     async function loadWeeklyEntry(dateStr) {
       clearWeeklyFormOnly();
+      loadedWeeklyEntry = {};
       const weekStart = getStartOfWeek(dateStr);
       weeklyViewTitle.textContent = formatWeekRange(weekStart);
       weeklySundayLabel.textContent = formatSundayLabel(weekStart);
@@ -1266,6 +1287,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       applyWeeklyEntry();
       try {
         const entry = await api(`/api/weekly/${weekStart}`);
+        loadedWeeklyEntry = { ...entry };
         applyWeeklyEntry(entry);
       } catch (error) {
         if (!String(error.message).includes('not found')) throw error;
@@ -1273,6 +1295,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       syncTaskFromWeeklyPlan(dateStr);
     }
     async function setCurrentDate(dateStr) {
+      await flushPendingSaves();
       fields.date.value = dateStr;
       await loadWeeklyEntry(dateStr);
       await loadEntry(dateStr);
@@ -1290,16 +1313,18 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       currentDate.setDate(currentDate.getDate() + (weeks * 7));
       await setStrategyWeek(isoDate(currentDate));
     }
-    async function saveEntry() {
+    async function saveEntry(options = {}) {
       const dateStr = fields.date.value;
       if (!dateStr) return;
+      if (!Object.keys(loadedDailyEntry).length && ![fields.chance.value.trim(), fields.gratitude.value.trim(), fields.task.value.trim(), fields.success1.value.trim(), fields.success2.value.trim(), fields.success3.value.trim(), fields.success4.value.trim(), fields.success5.value.trim()].some(Boolean)) return;
       await api(`/api/entries/${dateStr}`, { method: 'PUT', body: JSON.stringify(dailyPayload(dateStr)) });
-      showStatus(`Automatisch gespeichert: ${formatGermanDate(dateStr)}`);
+      if (!options.silent) showStatus(`Automatisch gespeichert: ${formatGermanDate(dateStr)}`);
     }
-    async function saveWeeklyEntry() {
+    async function saveWeeklyEntry(options = {}) {
       const dateStr = fields.date.value || todayString();
+      if (!Object.keys(loadedWeeklyEntry).length && ![fields.mottoLong.value.trim(), fields.focusWeek.value.trim(), fields.priorityWeek.value.trim(), fields.weeklyHealth.value.trim(), fields.weeklyRelationships.value.trim(), fields.weeklyFinances.value.trim(), fields.weeklyEmotions.value.trim(), fields.weeklyPurpose.value.trim(), ...weeklyEntryFields.map(key => fields[key].value.trim())].some(Boolean)) return;
       await api(`/api/weekly/${getStartOfWeek(dateStr)}`, { method: 'PUT', body: JSON.stringify(weeklyPayload(dateStr)) });
-      showStatus(`Woche gespeichert: ${formatWeekRange(dateStr)}`);
+      if (!options.silent) showStatus(`Woche gespeichert: ${formatWeekRange(dateStr)}`);
     }
     async function clearCurrentDay() {
       const dateStr = fields.date.value;
@@ -1434,21 +1459,32 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     let strategyAutosaveTimer;
     let dailyAutosaveTimer;
     let weeklyAutosaveTimer;
+    const AUTOSAVE_DELAY_MS = 800;
+    async function flushPendingSaves() {
+      if (!appInitialized) return;
+      clearTimeout(strategyAutosaveTimer);
+      clearTimeout(dailyAutosaveTimer);
+      clearTimeout(weeklyAutosaveTimer);
+      const results = await Promise.allSettled([saveStrategy({ silent: true }), saveEntry({ silent: true }), saveWeeklyEntry({ silent: true })]);
+      const failedSaves = results.filter(result => result.status === 'rejected');
+      if (failedSaves.length) throw failedSaves[0].reason || new Error('Autosave fehlgeschlagen');
+    }
     function scheduleStrategyAutosave() {
       clearTimeout(strategyAutosaveTimer);
-      strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
+      strategyAutosaveTimer = setTimeout(() => saveStrategy({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
     function scheduleDailyAutosave() {
       clearTimeout(dailyAutosaveTimer);
-      dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
+      dailyAutosaveTimer = setTimeout(() => saveEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
     function scheduleWeeklyAutosave() {
       clearTimeout(weeklyAutosaveTimer);
-      weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);
+      weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);
     }
     initRichTextEditors();
     fields.date.addEventListener('change', async () => {
       try {
+        await flushPendingSaves();
         await setCurrentDate(fields.date.value);
       } catch (error) {
         showStatus(`Fehler: ${error.message}`, true);
@@ -1457,7 +1493,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
     weekToggleBtn.addEventListener('click', () => {
       const nextView = currentView === 'weekly' ? 'daily' : 'weekly';
       setView(nextView);
-      if (nextView === 'weekly') loadWeeklyEntry(fields.date.value || todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true));
+      if (nextView === 'weekly') flushPendingSaves().then(() => loadWeeklyEntry(fields.date.value || todayString())).catch(error => showStatus(`Fehler: ${error.message}`, true));
     });
     yearPlanToggleBtn.addEventListener('click', () => {
       setView(currentView === 'year' ? 'daily' : 'year');
@@ -1466,7 +1502,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       btn.addEventListener('click', () => setYearPlanningSection(btn.dataset.yearSection));
     });
     prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
-    todayBtn.addEventListener('click', () => setCurrentDate(todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true)));
+    todayBtn.addEventListener('click', () => flushPendingSaves().then(() => setCurrentDate(todayString())).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     nextDayBtn.addEventListener('click', () => shiftCurrentDate(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     strategyWeekPrevBtn.addEventListener('click', () => shiftStrategyWeek(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
     strategyWeekNextBtn.addEventListener('click', () => shiftStrategyWeek(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));
@@ -1519,7 +1555,7 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       fields.date.value = todayString();
       setView(false);
       await loadStrategy(fields.date.value);
-      await loadEntry(fields.date.value);
+      await setCurrentDate(fields.date.value);
       appInitialized = true;
     }
     async function applySession(session) {
@@ -1549,6 +1585,11 @@ const laws = [{"title": "Treffe Entscheidungen", "text": "Heute werde ich meine 
       showStatus('Account angelegt. Falls Supabase E-Mail-Bestätigung aktiviert ist, bestätige die Mail.');
     }
     async function handleLogout() {
+      try {
+        await flushPendingSaves();
+      } catch (error) {
+        return showStatus(`Speichern vor Logout fehlgeschlagen: ${error.message}`, true);
+      }
       const { error } = await supabaseClient.auth.signOut();
       if (error) return showStatus(`Logout fehlgeschlagen: ${error.message}`, true);
       showStatus('Ausgeloggt');

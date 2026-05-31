@@ -2,7 +2,9 @@ import unittest
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = BASE.parent
 INDEX = BASE / 'index.html'
+LIVE_INDEX = PROJECT_ROOT / 'index.html'
 CONFIG = BASE / 'config.example.js'
 SCHEMA = BASE / 'supabase_schema_v4_json.sql'
 
@@ -27,6 +29,9 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertNotIn("fetch('/api/strategy'", html)
         self.assertNotIn("fetch('/api/entries/", html)
         self.assertNotIn("fetch('/api/weekly/", html)
+
+    def test_dev_and_live_index_are_kept_in_sync(self):
+        self.assertEqual(INDEX.read_text(encoding='utf-8'), LIVE_INDEX.read_text(encoding='utf-8'))
 
     def test_dev_index_contains_year_planning_view_from_screenshots(self):
         html = INDEX.read_text(encoding='utf-8')
@@ -56,13 +61,13 @@ class OnlineArtifactsTests(unittest.TestCase):
             'Lebenssinn',
             'Mission-Statement',
             'Werte',
-            'Orientierungssätze',
+            'Ziele',
+            'Leitsätze',
             'Lehren aus meiner Vergangenheit (2024)',
             'Meine größten Erfolge',
             'Die größten Erfolge meines Lebens',
         ]:
             self.assertIn(text, html)
-        self.assertNotIn('Wenn die Werte klar sind, fallen Entscheidungen leicht.', html)
         for field_id in [
             'year-success-question-1',
             'year-compass-identity',
@@ -79,7 +84,8 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertIn('class="year-section-nav"', html)
         ordered_buttons = [
             'data-year-section="year-section-compass">Kompass',
-            'data-year-section="year-section-guiding">Orientierungssätze',
+            'data-year-section="year-section-goals">Ziele',
+            'data-year-section="year-section-guiding">Leitsätze',
             'data-year-section="year-section-success">Erfolgsfragen',
             'data-year-section="year-section-lessons">Lehren',
             'data-year-section="year-section-successes">Erfolge',
@@ -90,6 +96,7 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertEqual(positions, sorted(positions))
         for section_id in [
             'year-section-compass',
+            'year-section-goals',
             'year-section-guiding',
             'year-section-success',
             'year-section-lessons',
@@ -141,10 +148,6 @@ class OnlineArtifactsTests(unittest.TestCase):
         html = INDEX.read_text(encoding='utf-8')
         self.assertIn('data-year-section="year-section-helpful">Hilfreiches', html)
         self.assertIn('id="year-section-helpful"', html)
-        self.assertNotIn('Langfristige Orientierung, Erfolgsfragen und Jahresblöcke.', html)
-        self.assertNotIn('Aus dem Ziele-Blatt: Datum, Sein, Tun und Haben. Die Kurzfassung steht auf der Hauptseite; hier ist die ausführliche Seite.', html)
-        self.assertNotIn('.year-card .note-editor,', html)
-        self.assertNotIn('.goal-detail-page input[type="text"] { background: rgba(255, 255, 255, 0.03); }', html)
         for title in ['Finanzen', 'Problemlösung', 'Angst', 'Beziehungen']:
             self.assertIn(f'<h3>{title}</h3>', html)
         for marker in [
@@ -254,12 +257,43 @@ class OnlineArtifactsTests(unittest.TestCase):
             self.assertIn(f'<div id="{field_id}" class="note-editor" contenteditable="true"></div>', html)
             self.assertNotIn(f'<input id="{field_id}" type="text">', html)
 
-    def test_autosave_waits_five_minutes_in_dev(self):
+    def test_autosave_uses_short_silent_live_save_debounce(self):
         html = INDEX.read_text(encoding='utf-8')
-        self.assertIn('strategyAutosaveTimer = setTimeout(() => saveStrategy().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
-        self.assertIn('dailyAutosaveTimer = setTimeout(() => saveEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
-        self.assertIn('weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry().catch(error => showStatus(`Fehler: ${error.message}`, true)), 300000);', html)
-        self.assertNotIn(')), 300);', html)
+        self.assertIn('const AUTOSAVE_DELAY_MS = 800;', html)
+        self.assertIn("strategyAutosaveTimer = setTimeout(() => saveStrategy({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);", html)
+        self.assertIn("dailyAutosaveTimer = setTimeout(() => saveEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);", html)
+        self.assertIn("weeklyAutosaveTimer = setTimeout(() => saveWeeklyEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true)), AUTOSAVE_DELAY_MS);", html)
+        self.assertNotIn('300000', html)
+
+    def test_live_save_success_is_silent_but_errors_still_visible(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('async function saveStrategy(options = {}) {', html)
+        self.assertIn("if (!options.silent) showStatus('Strategieblock gespeichert');", html)
+        self.assertIn('async function saveEntry(options = {}) {', html)
+        self.assertIn('if (!options.silent) showStatus(`Automatisch gespeichert: ${formatGermanDate(dateStr)}`);', html)
+        self.assertIn('async function saveWeeklyEntry(options = {}) {', html)
+        self.assertIn('if (!options.silent) showStatus(`Woche gespeichert: ${formatWeekRange(dateStr)}`);', html)
+        self.assertIn("saveStrategy({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true))", html)
+        self.assertIn("saveEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true))", html)
+        self.assertIn("saveWeeklyEntry({ silent: true }).catch(error => showStatus(`Fehler: ${error.message}`, true))", html)
+
+    def test_logout_flushes_pending_saves_before_signout(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('async function flushPendingSaves() {', html)
+        self.assertIn('clearTimeout(strategyAutosaveTimer);', html)
+        self.assertIn('clearTimeout(dailyAutosaveTimer);', html)
+        self.assertIn('clearTimeout(weeklyAutosaveTimer);', html)
+        self.assertIn("await Promise.allSettled([saveStrategy({ silent: true }), saveEntry({ silent: true }), saveWeeklyEntry({ silent: true })]);", html)
+        self.assertIn('await flushPendingSaves();', html)
+        self.assertLess(html.index('await flushPendingSaves();'), html.index('const { error } = await supabaseClient.auth.signOut();'))
+
+    def test_login_initialization_loads_weekly_and_daily_state_via_set_current_date(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('async function setCurrentDate(dateStr) {', html)
+        self.assertIn('await loadWeeklyEntry(dateStr);', html)
+        self.assertIn('await loadEntry(dateStr);', html)
+        self.assertIn('await setCurrentDate(fields.date.value);', html)
+        self.assertNotIn('await loadEntry(fields.date.value);', html)
 
     def test_strategy_week_fields_do_not_fallback_to_global_strategy_defaults(self):
         html = INDEX.read_text(encoding='utf-8')
@@ -269,6 +303,69 @@ class OnlineArtifactsTests(unittest.TestCase):
         self.assertNotIn("fields.mottoLong.value = hasOwn('motto_langfristig') ? (entry.motto_langfristig || '') : (strategyDefaults.motto_langfristig || '');", html)
         self.assertNotIn("fields.focusWeek.value = hasOwn('fokus_woche') ? (entry.fokus_woche || '') : (strategyDefaults.fokus_woche || '');", html)
         self.assertNotIn("fields.priorityWeek.value = hasOwn('prioritaeten_dieser_woche') ? (entry.prioritaeten_dieser_woche || '') : (strategyDefaults.prioritaeten_dieser_woche || '');", html)
+
+    def test_strategy_save_preserves_unknown_legacy_keys(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('let loadedStrategyEntry = {};', html)
+        self.assertIn('loadedStrategyEntry = { ...entry };', html)
+        self.assertIn('const payload = { ...loadedStrategyEntry,', html)
+
+    def test_daily_and_weekly_saves_do_not_create_empty_records(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('let loadedDailyEntry = {};', html)
+        self.assertIn('let loadedWeeklyEntry = {};', html)
+        self.assertIn("if (!Object.keys(loadedDailyEntry).length && ![fields.chance.value.trim(), fields.gratitude.value.trim(), fields.task.value.trim(), fields.success1.value.trim(), fields.success2.value.trim(), fields.success3.value.trim(), fields.success4.value.trim(), fields.success5.value.trim()].some(Boolean)) return;", html)
+        self.assertIn("if (!Object.keys(loadedWeeklyEntry).length && ![fields.mottoLong.value.trim(), fields.focusWeek.value.trim(), fields.priorityWeek.value.trim(), fields.weeklyHealth.value.trim(), fields.weeklyRelationships.value.trim(), fields.weeklyFinances.value.trim(), fields.weeklyEmotions.value.trim(), fields.weeklyPurpose.value.trim(), ...weeklyEntryFields.map(key => fields[key].value.trim())].some(Boolean)) return;", html)
+
+    def test_weekly_save_preserves_unknown_legacy_keys(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('loadedWeeklyEntry = { ...entry };', html)
+        self.assertIn('return {\n        ...loadedWeeklyEntry,\n        week_start: weekStart,', html)
+
+    def test_daily_save_preserves_unknown_legacy_keys(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('let loadedDailyEntry = {};', html)
+        self.assertIn('loadedDailyEntry = { ...entry };', html)
+        self.assertIn('loadedDailyEntry = {};', html)
+        self.assertIn('return {\n        ...loadedDailyEntry,', html)
+        self.assertIn("gesetz_heute_umsetzung: loadedDailyEntry.gesetz_heute_umsetzung || '',", html)
+        self.assertIn("reflexion_aufgabe_status: loadedDailyEntry.reflexion_aufgabe_status || '',", html)
+        self.assertIn("reflexion_aufgabe_warum: loadedDailyEntry.reflexion_aufgabe_warum || '',", html)
+        self.assertIn("reflexion_gesetz_status: loadedDailyEntry.reflexion_gesetz_status || '',", html)
+        self.assertIn("reflexion_gesetz_warum: loadedDailyEntry.reflexion_gesetz_warum || '',", html)
+
+    def test_navigation_flushes_pending_saves_before_date_or_week_change(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('await flushPendingSaves();', html)
+        self.assertIn("async function setCurrentDate(dateStr) {\n      await flushPendingSaves();\n      fields.date.value = dateStr;\n      await loadWeeklyEntry(dateStr);\n      await loadEntry(dateStr);\n    }", html)
+        self.assertIn("fields.date.addEventListener('change', async () => {", html)
+        self.assertIn('await flushPendingSaves();\n        await setCurrentDate(fields.date.value);', html)
+        self.assertIn("todayBtn.addEventListener('click', () => flushPendingSaves().then(() => setCurrentDate(todayString())).catch(error => showStatus(`Fehler: ${error.message}`, true)));", html)
+        self.assertIn("if (nextView === 'weekly') flushPendingSaves().then(() => loadWeeklyEntry(fields.date.value || todayString())).catch(error => showStatus(`Fehler: ${error.message}`, true));", html)
+        self.assertIn("prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));", html)
+        self.assertIn("strategyWeekPrevBtn.addEventListener('click', () => shiftStrategyWeek(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));", html)
+
+    def test_legacy_purpose_and_mission_are_split_deterministically(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('function splitLegacyPurposeMission(value) {', html)
+        self.assertIn("const parts = normalized.split(/\\n\\s*\\n/).map(part => part.trim()).filter(Boolean);", html)
+        self.assertIn("if (parts.length <= 1) return { purpose: normalized.trim(), mission: '' };", html)
+        self.assertIn("return { purpose: parts[0], mission: parts.slice(1).join('\\n\\n') };", html)
+        self.assertIn("const legacyPurposeMission = splitLegacyPurposeMission(entry.lebenssinn_mission);", html)
+        self.assertIn("fields.yearCompassPurpose.value = entry.jahresplanung_yearCompassPurpose || legacyPurposeMission.purpose || '';", html)
+        self.assertIn("fields.yearCompassMission.value = entry.jahresplanung_yearCompassMission || legacyPurposeMission.mission || '';", html)
+
+    def test_flush_pending_saves_raises_on_save_errors(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('const results = await Promise.allSettled([saveStrategy({ silent: true }), saveEntry({ silent: true }), saveWeeklyEntry({ silent: true })]);', html)
+        self.assertIn("const failedSaves = results.filter(result => result.status === 'rejected');", html)
+        self.assertIn("if (failedSaves.length) throw failedSaves[0].reason || new Error('Autosave fehlgeschlagen');", html)
+
+    def test_logout_stops_before_signout_when_flush_fails(self):
+        html = INDEX.read_text(encoding='utf-8')
+        self.assertIn('async function handleLogout() {', html)
+        self.assertIn('try {\n        await flushPendingSaves();\n      } catch (error) {\n        return showStatus(`Speichern vor Logout fehlgeschlagen: ${error.message}`, true);\n      }', html)
+        self.assertLess(html.index('return showStatus(`Speichern vor Logout fehlgeschlagen: ${error.message}`, true);'), html.index("const { error } = await supabaseClient.auth.signOut();"))
 
     def test_daily_view_has_day_navigation_buttons_without_clear_button(self):
         html = INDEX.read_text(encoding='utf-8')
@@ -284,7 +381,7 @@ class OnlineArtifactsTests(unittest.TestCase):
             'function shiftCurrentDate(days)',
             'function setCurrentDate(dateStr)',
             "prevDayBtn.addEventListener('click', () => shiftCurrentDate(-1).catch(error => showStatus(`Fehler: ${error.message}`, true)));",
-            "todayBtn.addEventListener('click', () => setCurrentDate(todayString()).catch(error => showStatus(`Fehler: ${error.message}`, true)));",
+            "todayBtn.addEventListener('click', () => flushPendingSaves().then(() => setCurrentDate(todayString())).catch(error => showStatus(`Fehler: ${error.message}`, true)));",
             "nextDayBtn.addEventListener('click', () => shiftCurrentDate(1).catch(error => showStatus(`Fehler: ${error.message}`, true)));"
         ]:
             self.assertIn(snippet, html)
